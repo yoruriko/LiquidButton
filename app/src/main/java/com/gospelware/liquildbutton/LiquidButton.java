@@ -33,7 +33,11 @@ public class LiquidButton extends View {
 
     private int liquidColor;
 
+    //control shift-x on sin wave
     private int fai = 0;
+    private final int FAI_FACTOR = 5;
+    private final int AMPLITUDE = 30;
+    private final float ANGLE_VELOCITY = 0.5f;
 
     public LiquidButton(Context context) {
         super(context);
@@ -70,13 +74,11 @@ public class LiquidButton extends View {
             mInterpolatedTime = interpolatedTime;
 
             if (interpolatedTime >= 0.2) {
-                fai += 5;
+                fai += FAI_FACTOR;
                 if (fai == 360) {
                     fai = 0;
                 }
             }
-
-
             invalidate();
         }
     }
@@ -141,7 +143,7 @@ public class LiquidButton extends View {
 
         for (int i = 0; i < 2 * radius; i++) {
             int dx = x + i;
-            int dy = (int) (30 * Math.sin((i * 0.5 + fai) * Math.PI / 180) + liquidLevel);
+            int dy = (int) (AMPLITUDE * Math.sin((i * ANGLE_VELOCITY + fai) * Math.PI / 180) + liquidLevel);
             if (i == 0) {
                 wavePath.moveTo(dx, dy);
             }
@@ -175,7 +177,7 @@ public class LiquidButton extends View {
     public void startPour() {
         mInterpolatedTime = 0;
         LiquidAnimation pour = new LiquidAnimation();
-        pour.setDuration(5000);
+        pour.setDuration(3000);
         pour.setInterpolator(new AccelerateInterpolator(0.6f));
 //        pour.setRepeatCount(Animation.INFINITE);
         startAnimation(pour);
