@@ -30,14 +30,19 @@ public class LiquidButton extends View {
     private float liquidLevel;
     private Path circlePath;
     private Path wavePath;
+    private LiquidAnimation liquidAnimation;
 
     private int liquidColor;
 
     //control shift-x on sin wave
     private int fai = 0;
-    private final int FAI_FACTOR = 5;
-    private final int AMPLITUDE = 30;
-    private final float ANGLE_VELOCITY = 0.5f;
+
+    private static final int FAI_FACTOR = 5;
+    private static final int AMPLITUDE = 40;
+    private static final float ANGLE_VELOCITY = 0.5f;
+
+    private final float TOUCH_BASE = 0.1f;
+    private final float FINISH_POUR = 0.9f;
 
     public LiquidButton(Context context) {
         super(context);
@@ -52,6 +57,49 @@ public class LiquidButton extends View {
         init();
     }
 
+
+    class LiquidAnimation extends Animation {
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            super.applyTransformation(interpolatedTime, t);
+            mInterpolatedTime = interpolatedTime;
+
+            if (interpolatedTime >= TOUCH_BASE) {
+                fai += FAI_FACTOR;
+                if (fai == 360) {
+                    fai = 0;
+                }
+            }
+
+            computeColor();
+            computePour();
+            computeLiquid();
+
+            invalidate();
+        }
+    }
+
+    class LiquidAnimationListener implements Animation.AnimationListener {
+
+        @Override
+        public void onAnimationStart(Animation animation) {
+            //reset the factors while the animation start
+            mInterpolatedTime = 0;
+            fai = 0;
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+
+        }
+    }
+
+
     protected void init() {
         pourPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         pourPaint.setDither(true);
@@ -59,6 +107,7 @@ public class LiquidButton extends View {
         pourPaint.setStrokeWidth(POUR_STROKE_WIDTH);
 
         liquidPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        liquidPaint.setDither(true);
         liquidPaint.setStyle(Paint.Style.FILL);
 
         pourTop = new PointF();
@@ -67,89 +116,78 @@ public class LiquidButton extends View {
         wavePath = new Path();
     }
 
-    class LiquidAnimation extends Animation {
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            super.applyTransformation(interpolatedTime, t);
-            mInterpolatedTime = interpolatedTime;
-
-            if (interpolatedTime >= 0.2) {
-                fai += FAI_FACTOR;
-                if (fai == 360) {
-                    fai = 0;
-                }
-            }
-            invalidate();
-        }
-    }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        computeColor();
+
         drawLiquid(canvas);
         drawPour(canvas);
+
     }
 
     protected void computeColor() {
-        int blue = 0;
-        int red = (mInterpolatedTime <= 0.8f) ? 255 : Math.round(255 * (1 - (mInterpolatedTime - 0.8f) / 0.2f));
-        int green = (mInterpolatedTime >= 0.8f) ? 255 : Math.round(255 * mInterpolatedTime / 0.8f);
+        int blue = 24;
+        int red = (mInterpolatedTime <= FINISH_POUR) ? 255 : Math.round(255 * (1 - (mInterpolatedTime - FINISH_POUR) / TOUCH_BASE));
+        int green = (mInterpolatedTime >= FINISH_POUR) ? 255 : Math.round(255 * mInterpolatedTime / FINISH_POUR);
         liquidColor = Color.rgb(red, green, blue);
     }
 
 
     protected void drawPour(Canvas canvas) {
-        computePour();
+
         pourPaint.setColor(liquidColor);
         canvas.drawLine(pourTop.x, pourTop.y, pourBottom.x, pourBottom.y, pourPaint);
     }
 
     protected void computePour() {
         pourTop.x = centreX;
-        //0.0~0.8 on top, 0.8~1.0 drop to bottom
-        pourTop.y = (mInterpolatedTime > 0.8) ? (mInterpolatedTime - 0.8f) / 0.2f * 2 * radius + top : top;
+        //0.0~0.9 on top, 0.9~1.0 drop to bottom
+        pourTop.y = (mInterpolatedTime > FINISH_POUR) ? (mInterpolatedTime - FINISH_POUR) / TOUCH_BASE * 2 * radius + top : top;
+
+//        pourTop.y = top;
 
         pourBottom.x = centreX;
-        //0.0~0.2 drop to bottom, 0.8~1.0 on top
-        pourBottom.y = (mInterpolatedTime < 0.2) ? mInterpolatedTime / 0.2f * pourHeight + top : bottom;
+        //0.0~0.1 drop to bottom, 0.9~1.0 on top
+        pourBottom.y = (mInterpolatedTime < TOUCH_BASE) ? mInterpolatedTime / TOUCH_BASE * pourHeight + top : bottom;
     }
 
     protected void drawLiquid(Canvas canvas) {
-        computeLiquid();
-
 
         //save the canvas status
         canvas.save();
-
         //clip the canvas to circle
         liquidPaint.setColor(liquidColor);
         canvas.clipPath(circlePath);
         canvas.drawPath(wavePath, liquidPaint);
-
         //restore the canvas status
         canvas.restore();
 
     }
 
     protected void computeLiquid() {
-        liquidLevel = (mInterpolatedTime < 0.2f) ? bottom : bottom - (2 * radius * (mInterpolatedTime - 0.2f) / 0.8f);
+
+        liquidLevel = (mInterpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (mInterpolatedTime - TOUCH_BASE) / FINISH_POUR);
 
         int x = centreX - radius;
         int y = centerY + radius;
-
 
         wavePath.reset();
 
         for (int i = 0; i < 2 * radius; i++) {
             int dx = x + i;
+
+            // y = a * sin( w * x + fai ) + h
             int dy = (int) (AMPLITUDE * Math.sin((i * ANGLE_VELOCITY + fai) * Math.PI / 180) + liquidLevel);
+
             if (i == 0) {
                 wavePath.moveTo(dx, dy);
             }
+
             wavePath.quadTo(dx, dy, dx + 1, dy);
 
         }
+
         wavePath.lineTo(centreX + radius, y);
         wavePath.lineTo(x, y);
         wavePath.close();
@@ -175,11 +213,16 @@ public class LiquidButton extends View {
     }
 
     public void startPour() {
-        mInterpolatedTime = 0;
-        LiquidAnimation pour = new LiquidAnimation();
-        pour.setDuration(3000);
-        pour.setInterpolator(new AccelerateInterpolator(0.6f));
+        //reset some factors
+        if (liquidAnimation == null) {
+            liquidAnimation = new LiquidAnimation();
+            liquidAnimation.setDuration(5000);
+            liquidAnimation.setInterpolator(new AccelerateInterpolator(0.6f));
 //        pour.setRepeatCount(Animation.INFINITE);
-        startAnimation(pour);
+            liquidAnimation.setAnimationListener(new LiquidAnimationListener());
+        }
+
+        startAnimation(liquidAnimation);
+
     }
 }
