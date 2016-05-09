@@ -8,8 +8,9 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Transformation;
 
 /**
@@ -18,12 +19,13 @@ import android.view.animation.Transformation;
 public class LiquidButton extends View {
 
     private Paint pourPaint, liquidPaint;
-    private int width, height, centreX, centerY, top, radius, bottom;
+    private int width, height, centreX, centerY, frameTop, left, radius, bottom;
+    private int bounceY;
     private int pourHeight;
 
     private final int POUR_STROKE_WIDTH = 30;
 
-    private float mInterpolatedTime;
+//    private float mInterpolatedTime;
 
     private PointF pourTop, pourBottom;
 
@@ -38,8 +40,11 @@ public class LiquidButton extends View {
     private int fai = 0;
 
     private static final int FAI_FACTOR = 5;
-    private static final int AMPLITUDE = 40;
+    private static final int AMPLITUDE = 50;
     private static final float ANGLE_VELOCITY = 0.5f;
+
+    private static final int POUR_START = 1;
+    private static final int POUR_END = -1;
 
     private final float TOUCH_BASE = 0.1f;
     private final float FINISH_POUR = 0.9f;
@@ -62,19 +67,21 @@ public class LiquidButton extends View {
         @Override
         protected void applyTransformation(float interpolatedTime, Transformation t) {
             super.applyTransformation(interpolatedTime, t);
-            mInterpolatedTime = interpolatedTime;
 
-            if (interpolatedTime >= TOUCH_BASE) {
-                fai += FAI_FACTOR;
-                if (fai == 360) {
-                    fai = 0;
-                }
-            }
+            computeColor(interpolatedTime);
+            computePour(POUR_START, interpolatedTime);
+            computeLiquid(interpolatedTime);
 
-            computeColor();
-            computePour();
-            computeLiquid();
+            invalidate();
+        }
+    }
 
+    class BounceAnimation extends Animation {
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            super.applyTransformation(interpolatedTime, t);
+            computePour(POUR_END, interpolatedTime);
+            computeBounceBall(interpolatedTime);
             invalidate();
         }
     }
@@ -83,14 +90,16 @@ public class LiquidButton extends View {
 
         @Override
         public void onAnimationStart(Animation animation) {
-            //reset the factors while the animation start
-            mInterpolatedTime = 0;
+            //reset the scroll in x direction while the animation start
             fai = 0;
         }
 
         @Override
         public void onAnimationEnd(Animation animation) {
-
+            BounceAnimation bounceAnimation = new BounceAnimation();
+            bounceAnimation.setDuration(500);
+            bounceAnimation.setInterpolator(new BounceInterpolator());
+            startAnimation(bounceAnimation);
         }
 
         @Override
@@ -121,18 +130,36 @@ public class LiquidButton extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        drawLiquid(canvas);
-        drawPour(canvas);
+        if (liquidAnimation != null) {
+            if (!liquidAnimation.hasEnded()) {
+                drawLiquid(canvas);
+                drawPour(canvas);
+            } else {
+                drawPour(canvas);
+                drawBounceBall(canvas);
+            }
+        }
 
     }
 
-    protected void computeColor() {
+    protected void computeColor(float interpolatedTime) {
         int blue = 24;
-        int red = (mInterpolatedTime <= FINISH_POUR) ? 255 : Math.round(255 * (1 - (mInterpolatedTime - FINISH_POUR) / TOUCH_BASE));
-        int green = (mInterpolatedTime >= FINISH_POUR) ? 255 : Math.round(255 * mInterpolatedTime / FINISH_POUR);
+        int red = (interpolatedTime <= FINISH_POUR) ? 255 : Math.round(255 * (1 - (interpolatedTime - FINISH_POUR) / TOUCH_BASE));
+        int green = (interpolatedTime >= FINISH_POUR) ? 255 : Math.round(255 * interpolatedTime / FINISH_POUR);
         liquidColor = Color.rgb(red, green, blue);
     }
 
+    protected void computePour(int type, float interpolatedTime) {
+        pourTop.x = centreX;
+        pourBottom.x = centreX;
+        if (type == POUR_START) {
+            pourTop.y = frameTop;
+            //0.0~0.1 drop to bottom, 0.9~1.0 on top
+            pourBottom.y = (interpolatedTime < TOUCH_BASE) ? interpolatedTime / TOUCH_BASE * pourHeight + frameTop : bottom;
+        } else if (type == POUR_END) {
+            pourTop.y = frameTop + (2 * radius * interpolatedTime);
+        }
+    }
 
     protected void drawPour(Canvas canvas) {
 
@@ -140,17 +167,42 @@ public class LiquidButton extends View {
         canvas.drawLine(pourTop.x, pourTop.y, pourBottom.x, pourBottom.y, pourPaint);
     }
 
-    protected void computePour() {
-        pourTop.x = centreX;
-        //0.0~0.9 on top, 0.9~1.0 drop to bottom
-        pourTop.y = (mInterpolatedTime > FINISH_POUR) ? (mInterpolatedTime - FINISH_POUR) / TOUCH_BASE * 2 * radius + top : top;
+    protected void computeLiquid(float interpolatedTime) {
 
-//        pourTop.y = top;
+        liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
 
-        pourBottom.x = centreX;
-        //0.0~0.1 drop to bottom, 0.9~1.0 on top
-        pourBottom.y = (mInterpolatedTime < TOUCH_BASE) ? mInterpolatedTime / TOUCH_BASE * pourHeight + top : bottom;
+        // scroll x by the fai factor
+        if (interpolatedTime >= TOUCH_BASE) {
+            //slowly reduce the wave frequency
+            fai += FAI_FACTOR * (1.4f - interpolatedTime);
+            if (fai == 360) {
+                fai = 0;
+            }
+        }
+        //clear the path for next render
+        wavePath.reset();
+        //slowly reduce the amplitude when filling comes to end
+        float a = (interpolatedTime <= FINISH_POUR) ? AMPLITUDE : AMPLITUDE * (1.4f - interpolatedTime);
+
+        for (int i = 0; i < 2 * radius; i++) {
+            int dx = left + i;
+
+            // y = a * sin( w * x + fai ) + h
+            int dy = (int) (a * Math.sin((i * ANGLE_VELOCITY + fai) * Math.PI / 180) + liquidLevel);
+
+            if (i == 0) {
+                wavePath.moveTo(dx, dy);
+            }
+
+            wavePath.quadTo(dx, dy, dx + 1, dy);
+        }
+
+        wavePath.lineTo(centreX + radius, bottom);
+        wavePath.lineTo(left, bottom);
+
+        wavePath.close();
     }
+
 
     protected void drawLiquid(Canvas canvas) {
 
@@ -160,37 +212,18 @@ public class LiquidButton extends View {
         liquidPaint.setColor(liquidColor);
         canvas.clipPath(circlePath);
         canvas.drawPath(wavePath, liquidPaint);
-        //restore the canvas status
+        //restore the canvas status~
         canvas.restore();
 
     }
 
-    protected void computeLiquid() {
 
-        liquidLevel = (mInterpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (mInterpolatedTime - TOUCH_BASE) / FINISH_POUR);
+    protected void computeBounceBall(float interpolatedTime) {
 
-        int x = centreX - radius;
-        int y = centerY + radius;
+    }
 
-        wavePath.reset();
-
-        for (int i = 0; i < 2 * radius; i++) {
-            int dx = x + i;
-
-            // y = a * sin( w * x + fai ) + h
-            int dy = (int) (AMPLITUDE * Math.sin((i * ANGLE_VELOCITY + fai) * Math.PI / 180) + liquidLevel);
-
-            if (i == 0) {
-                wavePath.moveTo(dx, dy);
-            }
-
-            wavePath.quadTo(dx, dy, dx + 1, dy);
-
-        }
-
-        wavePath.lineTo(centreX + radius, y);
-        wavePath.lineTo(x, y);
-        wavePath.close();
+    protected void drawBounceBall(Canvas canvas) {
+        canvas.drawCircle(centreX, bounceY, radius, liquidPaint);
     }
 
     @Override
@@ -202,11 +235,14 @@ public class LiquidButton extends View {
 
         centreX = width / 2;
         centerY = height / 2;
+        bounceY = centerY;
 
         radius = width / 8;
 
-        top = centerY - 3 * radius;
+        frameTop = centerY - 3 * radius;
+        left = centreX - radius;
         bottom = centerY + radius;
+
         pourHeight = 4 * radius;
 
         circlePath.addCircle(centreX, centerY, radius, Path.Direction.CW);
@@ -217,7 +253,7 @@ public class LiquidButton extends View {
         if (liquidAnimation == null) {
             liquidAnimation = new LiquidAnimation();
             liquidAnimation.setDuration(5000);
-            liquidAnimation.setInterpolator(new AccelerateInterpolator(0.6f));
+            liquidAnimation.setInterpolator(new DecelerateInterpolator(0.8f));
 //        pour.setRepeatCount(Animation.INFINITE);
             liquidAnimation.setAnimationListener(new LiquidAnimationListener());
         }
