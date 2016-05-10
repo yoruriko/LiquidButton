@@ -84,7 +84,7 @@ public class LiquidButton extends Button {
         }
 
         public float doMaths(float timeLeft, float time, float start, float control, float end) {
-            return timeLeft * timeLeft * timeLeft * start
+            return timeLeft * timeLeft * start
                     + 2 * time * timeLeft * control
                     + time * time * end;
         }
@@ -208,6 +208,14 @@ public class LiquidButton extends Button {
 
     protected void computePourFinish(float interpolatedTime) {
         pourTop.y = frameTop + (2 * radius * interpolatedTime);
+
+        //generate some bubbles when the pour animation comes to end
+        if (Math.abs(interpolatedTime - 0.2f) <= 0.1f) {
+            int count = random.nextInt(5);
+            for (int i = 0; i < count; i++) {
+                generateBubble();
+            }
+        }
     }
 
     protected void drawPour(Canvas canvas) {
@@ -219,6 +227,7 @@ public class LiquidButton extends Button {
 
         liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
 
+        //generate bubbles at 0.3, 0.6 and 0.9
         if (interpolatedTime > 0.2f) {
             if (interpolatedTime % 0.3f <= 0.01) {
                 generateBubble();
@@ -264,11 +273,12 @@ public class LiquidButton extends Button {
         PointF end = new PointF();
 
         start.x = centreX;
-        start.y = liquidLevel;
-        end.x = generateBubbleX();
-        end.y = liquidLevel - 0.2f*radius*random.nextFloat();
         control.x = generateBubbleX();
-        control.y = liquidLevel - (0.5f*(start.y-end.y));
+        end.x = control.x + (control.x - start.x) * random.nextFloat();
+        start.y = liquidLevel;
+        control.y = liquidLevel - radius * (random.nextFloat() + 0.2f);
+        end.y = liquidLevel - (0.5f * (start.y - control.y));
+
 
         float radius = generateRadius();
 
@@ -289,11 +299,17 @@ public class LiquidButton extends Button {
     }
 
     protected float generateBubbleX() {
-        return left + ((random.nextFloat() + 0.5f) * radius);
+        int side = random.nextInt();
+        //generate bubbles
+        if (side % 2 == 0) {
+            return centreX - 0.5f * POUR_STROKE_WIDTH - (random.nextFloat() * radius * 0.8f);
+        } else {
+            return centreX + 0.5f * POUR_STROKE_WIDTH + (random.nextFloat() * radius * 0.8f);
+        }
     }
 
     protected float generateRadius() {
-        return radius*0.2f*random.nextFloat();
+        return radius * 0.2f * random.nextFloat();
     }
 
     protected int generateDuration() {
