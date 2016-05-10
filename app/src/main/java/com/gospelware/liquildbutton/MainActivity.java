@@ -8,9 +8,11 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
 
-    @OnClick(R.id.button)void start(LiquidButton liquidButton){
-        liquidButton.startPour();
+    @OnClick(R.id.button)
+    void clickAdd(LiquidButton button) {
+        button.startPour();
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

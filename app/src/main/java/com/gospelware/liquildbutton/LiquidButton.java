@@ -1,5 +1,7 @@
 package com.gospelware.liquildbutton;
 
+import android.animation.Animator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -7,27 +9,32 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.util.AttributeSet;
-import android.view.View;
+import android.util.Log;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.view.animation.ScaleAnimation;
 import android.view.animation.Transformation;
+import android.widget.Button;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Created by ricogao on 06/05/2016.
  */
-public class LiquidButton extends View {
+public class LiquidButton extends Button {
 
-    private Paint pourPaint, liquidPaint, tickPaint;
+    private Paint pourPaint, liquidPaint, tickPaint, bubblePaint;
     private int centreX, centerY, frameTop, left, top, radius, bottom;
     private int bounceY;
     private int pourHeight;
 
     private static final int POUR_STROKE_WIDTH = 30;
     private static final int TICK_STROKE_WIDTH = 15;
-
-//    private float mInterpolatedTime;
 
     private PointF pourTop, pourBottom, tickPoint1, tickPoint2, tickPoint3, tickControl2, tickControl3;
 
@@ -37,6 +44,8 @@ public class LiquidButton extends View {
     private Animation liquidAnimation, bounceAnimation, tickAnimation;
     private AnimationSet set;
 
+    private List<Bubble> bubbles = new ArrayList<>();
+    private Random random;
 
     private int liquidColor;
 
@@ -64,6 +73,36 @@ public class LiquidButton extends View {
         init();
     }
 
+    class Bubble {
+        PointF start, end, control, current;
+        float alpha, radius;
+
+        public Bubble(PointF start, PointF end, PointF control, float radius) {
+            this.start = start;
+            this.end = end;
+            this.control = control;
+            this.radius = radius;
+            current = start;
+        }
+
+        public float doMaths(float timeLeft, float time, float start, float control, float end) {
+            return timeLeft * timeLeft * timeLeft * start
+                    + 2 * time * timeLeft * control
+                    + time * time * end;
+        }
+
+        public void evaluate(float interpolatedTime) {
+            float timeLeft = 1.0f - interpolatedTime;
+            PointF pointF = new PointF();
+
+            pointF.x = doMaths(timeLeft, interpolatedTime, start.x, control.x, end.x);
+            pointF.y = doMaths(timeLeft, interpolatedTime, start.y, control.y, end.y);
+
+            alpha = 1.0f - interpolatedTime;
+
+            current = pointF;
+        }
+    }
 
     class LiquidAnimation extends Animation {
         @Override
@@ -77,7 +116,6 @@ public class LiquidButton extends View {
             invalidate();
         }
     }
-
 
     class BounceAnimation extends Animation {
         @Override
@@ -116,6 +154,9 @@ public class LiquidButton extends View {
         tickPaint.setStyle(Paint.Style.STROKE);
         tickPaint.setStrokeWidth(TICK_STROKE_WIDTH);
 
+        bubblePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        bubblePaint.setStyle(Paint.Style.FILL);
+
         pourTop = new PointF();
         pourBottom = new PointF();
 
@@ -126,38 +167,29 @@ public class LiquidButton extends View {
         circlePath = new Path();
         wavePath = new Path();
         tickPath = new Path();
+        random = new Random();
     }
 
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-//
-//        if (!liquidAnimation.hasEnded()) {
-//            drawLiquid(canvas);
-//            drawPour(canvas);
-//        } else {
-//            drawBounceBall(canvas);
-//            if (!bounceAnimation.hasEnded()) {
-//                drawPour(canvas);
-//            } else {
-//                drawTick(canvas);
-//            }
-//        }
 
-        if (set == null) {
-            return;
-        }
+        if (set != null) {
+            drawPour(canvas);
 
-        drawPour(canvas);
-
-        if (liquidAnimation.hasEnded()) {
-            drawBounceBall(canvas);
-            if (bounceAnimation.hasEnded()) {
-                drawTick(canvas);
+            if (bubbles.size() > 0) {
+                drawBubbles(canvas);
             }
-        } else {
-            drawLiquid(canvas);
+
+            if (liquidAnimation.hasEnded()) {
+                drawBounceBall(canvas);
+                if (bounceAnimation.hasEnded()) {
+                    drawTick(canvas);
+                }
+            } else {
+                drawLiquid(canvas);
+            }
         }
 
 
@@ -189,6 +221,12 @@ public class LiquidButton extends View {
 
         liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
 
+        if (interpolatedTime > 0.2f) {
+            if (interpolatedTime % 0.3f <= 0.01) {
+                generateBubble();
+            }
+        }
+
         // scroll x by the fai factor
         if (interpolatedTime >= TOUCH_BASE) {
             //slowly reduce the wave frequency
@@ -219,6 +257,49 @@ public class LiquidButton extends View {
         wavePath.lineTo(left, bottom);
 
         wavePath.close();
+    }
+
+    protected void generateBubble() {
+
+        PointF start = new PointF();
+        PointF control = new PointF();
+        PointF end = new PointF();
+
+        start.x = centreX;
+        start.y = liquidLevel;
+        end.x = generateBubbleX();
+        end.y = liquidLevel - 0.2f*radius*random.nextFloat();
+        control.x = generateBubbleX();
+        control.y = liquidLevel - (0.5f*(start.y-end.y));
+
+        float radius = generateRadius();
+
+        final Bubble bubble = new Bubble(start, end, control, radius);
+        ValueAnimator animator = ValueAnimator.ofFloat(0.0f, 1.0f);
+        animator.setInterpolator(new DecelerateInterpolator(0.8f));
+        animator.setDuration(generateDuration());
+
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                bubble.evaluate((float) animation.getAnimatedValue());
+            }
+        });
+
+        animator.start();
+        bubbles.add(bubble);
+    }
+
+    protected float generateBubbleX() {
+        return left + ((random.nextFloat() + 0.5f) * radius);
+    }
+
+    protected float generateRadius() {
+        return radius*0.2f*random.nextFloat();
+    }
+
+    protected int generateDuration() {
+        return random.nextInt(500) + 1000;
     }
 
 
@@ -289,6 +370,14 @@ public class LiquidButton extends View {
         canvas.drawPath(tickPath, tickPaint);
     }
 
+    protected void drawBubbles(Canvas canvas) {
+        for (Bubble bubble : bubbles) {
+            bubblePaint.setColor(liquidColor);
+            bubblePaint.setAlpha(Math.round(255 * bubble.alpha));
+            canvas.drawCircle(bubble.current.x, bubble.current.y, bubble.radius, bubblePaint);
+        }
+    }
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
@@ -326,6 +415,7 @@ public class LiquidButton extends View {
         fai = 0;
         tickControl2 = null;
         tickControl3 = null;
+        bubbles.clear();
 
 
         if (set == null) {
@@ -336,7 +426,7 @@ public class LiquidButton extends View {
 
             bounceAnimation = new BounceAnimation();
             bounceAnimation.setDuration(500);
-            bounceAnimation.setInterpolator(new OvershootInterpolator(2.5f));
+            bounceAnimation.setInterpolator(new OvershootInterpolator(3.0f));
             bounceAnimation.setStartOffset(5000);
 
             tickAnimation = new TickAnimation();
@@ -344,14 +434,17 @@ public class LiquidButton extends View {
             tickAnimation.setInterpolator(new OvershootInterpolator(2.0f));
             tickAnimation.setStartOffset(5500);
 
+            Animation scale = new ScaleAnimation(1f, 0.8f, 1f, 0.8f, centreX, centerY);
+            scale.setDuration(500);
+            scale.setStartOffset(5500);
+
             set.addAnimation(liquidAnimation);
             set.addAnimation(bounceAnimation);
             set.addAnimation(tickAnimation);
+            set.setFillAfter(true);
+            set.addAnimation(scale);
         }
 
         startAnimation(set);
-
-
-
     }
 }
