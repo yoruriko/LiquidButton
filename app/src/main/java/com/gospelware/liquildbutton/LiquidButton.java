@@ -23,7 +23,6 @@ import java.util.Random;
 /**
  * Created by ricogao on 06/05/2016.
  */
-
 public class LiquidButton extends Button {
 
     private Paint pourPaint, liquidPaint, tickPaint, bubblePaint;
