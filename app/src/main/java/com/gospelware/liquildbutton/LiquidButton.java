@@ -31,8 +31,8 @@ public class LiquidButton extends Button {
     private int bounceY;
     private int pourHeight;
 
-    private static final int POUR_STROKE_WIDTH = 30;
-    private static final int TICK_STROKE_WIDTH = 15;
+    private int pourStrokeWidth;
+    private int tickStrokeWidth;
 
     private PointF pourTop, pourBottom, tickPoint1, tickPoint2, tickPoint3, tickControl2, tickControl3;
 
@@ -51,7 +51,7 @@ public class LiquidButton extends Button {
     private int fai = 0;
 
     private static final int FAI_FACTOR = 5;
-    private static final int AMPLITUDE = 50;
+    private float aptitude;
     private static final float ANGLE_VELOCITY = 0.5f;
 
     private final float TOUCH_BASE = 0.1f;
@@ -139,7 +139,7 @@ public class LiquidButton extends Button {
         pourPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         pourPaint.setDither(true);
         pourPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        pourPaint.setStrokeWidth(POUR_STROKE_WIDTH);
+
 
         liquidPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         liquidPaint.setDither(true);
@@ -150,7 +150,7 @@ public class LiquidButton extends Button {
         tickPaint.setColor(Color.WHITE);
         tickPaint.setStrokeCap(Paint.Cap.ROUND);
         tickPaint.setStyle(Paint.Style.STROKE);
-        tickPaint.setStrokeWidth(TICK_STROKE_WIDTH);
+
 
         bubblePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         bubblePaint.setStyle(Paint.Style.FILL);
@@ -210,9 +210,9 @@ public class LiquidButton extends Button {
         pourTop.y = frameTop + (2 * radius * interpolatedTime);
 
         //generate some bubbles when the pour animation comes to end
-        if(Math.abs(interpolatedTime-0.2f)<=0.15f){
-            int count=random.nextInt(3)+3;
-            for (int i = 0; i <count ; i++) {
+        if (Math.abs(interpolatedTime - 0.2f) <= 0.15f) {
+            int count = random.nextInt(3) + 3;
+            for (int i = 0; i < count; i++) {
                 generateBubble();
             }
         }
@@ -245,7 +245,7 @@ public class LiquidButton extends Button {
         //clear the path for next render
         wavePath.reset();
         //slowly reduce the amplitude when filling comes to end
-        float a = (interpolatedTime <= FINISH_POUR) ? AMPLITUDE : AMPLITUDE * (1.4f - interpolatedTime);
+        float a = (interpolatedTime <= FINISH_POUR) ? aptitude : aptitude * (1.4f - interpolatedTime);
 
         for (int i = 0; i < 2 * radius; i++) {
             int dx = left + i;
@@ -302,9 +302,9 @@ public class LiquidButton extends Button {
         int side = random.nextInt();
         //generate bubbles
         if (side % 2 == 0) {
-            return centreX - 0.5f * POUR_STROKE_WIDTH - (random.nextFloat() * radius * 0.8f);
+            return centreX - 0.5f * pourStrokeWidth - (random.nextFloat() * radius * 0.8f);
         } else {
-            return centreX + 0.5f * POUR_STROKE_WIDTH + (random.nextFloat() * radius * 0.8f);
+            return centreX + 0.5f * pourStrokeWidth + (random.nextFloat() * radius * 0.8f);
         }
     }
 
@@ -404,6 +404,11 @@ public class LiquidButton extends Button {
         bounceY = centerY;
 
         radius = width / 8;
+        aptitude = radius * 0.4f;
+        pourStrokeWidth = radius / 6;
+        pourPaint.setStrokeWidth(pourStrokeWidth);
+        tickStrokeWidth = pourStrokeWidth / 2;
+        tickPaint.setStrokeWidth(tickStrokeWidth);
 
         frameTop = centerY - 3 * radius;
         left = centreX - radius;
