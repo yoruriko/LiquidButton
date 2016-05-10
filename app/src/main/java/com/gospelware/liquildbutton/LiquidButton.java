@@ -210,9 +210,9 @@ public class LiquidButton extends Button {
         pourTop.y = frameTop + (2 * radius * interpolatedTime);
 
         //generate some bubbles when the pour animation comes to end
-        if (Math.abs(interpolatedTime - 0.2f) <= 0.1f) {
-            int count = random.nextInt(5);
-            for (int i = 0; i < count; i++) {
+        if(Math.abs(interpolatedTime-0.2f)<=0.15f){
+            int count=random.nextInt(3)+3;
+            for (int i = 0; i <count ; i++) {
                 generateBubble();
             }
         }
