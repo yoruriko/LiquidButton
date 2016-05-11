@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
+import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.Animation;
@@ -56,7 +57,6 @@ public class LiquidButton extends View {
     private static final float ANGLE_VELOCITY = 0.5f;
 
 
-    private static final float LIQUID_DECELERATE_FACTOR = 0.8f;
     private static final long LIQUID_ANIMATION_DURATION = 5000;
     private static final float BOUNCE_OVERSHOOT_TENSION = 3.0f;
     private static final long BOUNCE_ANIMATION_DURATION = 500;
@@ -202,6 +202,7 @@ public class LiquidButton extends View {
         if (set != null) {
             drawPour(canvas);
 
+            //if there are bubbles generated draw the bubbles
             if (bubbles.size() > 0) {
                 drawBubbles(canvas);
             }
@@ -253,9 +254,9 @@ public class LiquidButton extends View {
 
         liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
 
-        //generate bubbles at 0.3, 0.6 and 0.9
+        //generate bubbles at 0.4, 0.6 ,0.8 and 1.0
         if (interpolatedTime > 0.2f) {
-            if (interpolatedTime % 0.3f <= 0.01) {
+            if (interpolatedTime % 0.2f <= 0.01) {
                 generateBubble();
             }
         }
@@ -471,7 +472,7 @@ public class LiquidButton extends View {
             set = new AnimationSet(false);
             liquidAnimation = new LiquidAnimation();
             liquidAnimation.setDuration(LIQUID_ANIMATION_DURATION);
-            liquidAnimation.setInterpolator(new DecelerateInterpolator(LIQUID_DECELERATE_FACTOR));
+            liquidAnimation.setInterpolator(new FastOutLinearInInterpolator());
 
             bounceAnimation = new BounceAnimation();
             bounceAnimation.setDuration(BOUNCE_ANIMATION_DURATION);

@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
             liquidButton.setPourListener(new LiquidButton.PourFinishListener() {
                 @Override
                 public void onPourFinish() {
-                    Toast.makeText(MainActivity.this, "Loading Finsh!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Loading Finish!", Toast.LENGTH_SHORT).show();
                 }
             });
 
