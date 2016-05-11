@@ -1,5 +1,7 @@
 package com.gospelware.liquildbutton;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -8,13 +10,13 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.view.animation.ScaleAnimation;
 import android.view.animation.Transformation;
-import android.widget.Button;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,7 @@ import java.util.Random;
  * Created by ricogao on 06/05/2016.
  */
 
-public class LiquidButton extends Button {
+public class LiquidButton extends View {
 
     private Paint pourPaint, liquidPaint, tickPaint, bubblePaint;
     private int centreX, centerY, frameTop, left, top, radius, bottom;
@@ -41,6 +43,9 @@ public class LiquidButton extends Button {
     private Path wavePath, tickPath;
     private Animation liquidAnimation, bounceAnimation, tickAnimation;
     private AnimationSet set;
+
+    private ObjectAnimator liquidAnimator, bounceAnimator, tickAnimator;
+    private AnimatorSet animatorSet;
 
     private List<Bubble> bubbles = new ArrayList<>();
     private Random random;
@@ -82,6 +87,8 @@ public class LiquidButton extends Button {
             this.radius = radius;
             current = start;
         }
+
+        // Bezier Curve B(t)=(1-t)^2*P0+2t(1-t)*P1+t^2P2
 
         public float doMaths(float timeLeft, float time, float start, float control, float end) {
             return timeLeft * timeLeft * start
@@ -392,6 +399,7 @@ public class LiquidButton extends Button {
         }
     }
 
+
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
@@ -403,8 +411,8 @@ public class LiquidButton extends Button {
         centerY = height / 2;
         bounceY = centerY;
 
-        radius = width / 8;
-        aptitude = radius * 0.4f;
+        radius = width / 4;
+        aptitude = radius * 0.3f;
         pourStrokeWidth = radius / 6;
         pourPaint.setStrokeWidth(pourStrokeWidth);
         tickStrokeWidth = pourStrokeWidth / 2;
@@ -466,4 +474,63 @@ public class LiquidButton extends Button {
 
         startAnimation(set);
     }
+
+//        if (animatorSet == null) {
+//            animatorSet = new AnimatorSet();
+//
+//            liquidAnimator = ObjectAnimator.ofFloat(this, "liquid", 0.0f, 1.0f);
+//            liquidAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//                @Override
+//                public void onAnimationUpdate(ValueAnimator animation) {
+//                    float interpolatedTime = (float) animation.getAnimatedValue();
+//
+//                    ObjectAnimator animator = (ObjectAnimator) animation;
+//                    LiquidButton button = (LiquidButton) animator.getTarget();
+//                    button.computeColor(interpolatedTime);
+//                    button.computePourStart(interpolatedTime);
+//                    button.computeLiquid(interpolatedTime);
+//                    button.invalidate();
+//                }
+//            });
+//            liquidAnimator.setDuration(5000);
+//            liquidAnimator.setInterpolator(new DecelerateInterpolator(0.8f));
+//
+//            bounceAnimator = ObjectAnimator.ofFloat(this, "bounce", 0.0f, 1f);
+//            bounceAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//                @Override
+//                public void onAnimationUpdate(ValueAnimator animation) {
+//                    float interpolatedTime = (float) animation.getAnimatedValue();
+//
+//                    ObjectAnimator animator = (ObjectAnimator) animation;
+//                    LiquidButton button = (LiquidButton) animator.getTarget();
+//
+//                    button.computePourFinish(interpolatedTime);
+//                    button.computeBounceBall(interpolatedTime);
+//
+//                    button.invalidate();
+//                }
+//            });
+//            bounceAnimator.setDuration(500);
+//            bounceAnimator.setInterpolator(new OvershootInterpolator(3.0f));
+//
+//            tickAnimator = ObjectAnimator.ofFloat(this, "tick", 0.0f, 1f);
+//            tickAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+//                @Override
+//                public void onAnimationUpdate(ValueAnimator animation) {
+//                    float interpolatedTime = (float) animation.getAnimatedValue();
+//
+//                    ObjectAnimator animator = (ObjectAnimator) animation;
+//                    LiquidButton button = (LiquidButton) animator.getTarget();
+//                    button.computeTick(interpolatedTime);
+//                    button.invalidate();
+//                }
+//            });
+//            tickAnimator.setDuration(800);
+//            tickAnimator.setInterpolator(new OvershootInterpolator(2.0f));
+//
+//            animatorSet.playSequentially(liquidAnimator, bounceAnimator, tickAnimator);
+//        }
+//        animatorSet.start();
+//
+//    }
 }
