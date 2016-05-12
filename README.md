@@ -48,12 +48,3 @@ dependencies {
 }
 ```
 
-**Maven**
-```java
-<dependency>
-  <groupId>com.gospelware.liquidbutton</groupId>
-  <artifactId>liquidButtonLib</artifactId>
-  <version>1.0.1</version>
-  <type>pom</type>
-</dependency>
-```
