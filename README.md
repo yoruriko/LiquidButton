@@ -44,7 +44,7 @@ Uses startPour() to start the animation.
 
 ```java
 dependencies {    
-  compile 'com.gospelware.liquidbutton:liquidButtonLib:1.0.1'    
+  compile 'com.gospelware.liquidbutton:liquidButtonLib:1.0.2'    
 }
 ```
 
