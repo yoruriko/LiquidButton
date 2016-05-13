@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     tools:context=".Example.MainActivity">
 
-    <com.gospelware.liquidbutton.LiquidButton
+    <com.gospelware.liquidbutton.LiquidCheckView
         android:id="@+id/button"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
