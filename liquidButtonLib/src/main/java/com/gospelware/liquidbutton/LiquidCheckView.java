@@ -1,6 +1,7 @@
 package com.gospelware.liquidbutton;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -10,6 +11,7 @@ import android.view.View;
 import com.gospelware.liquidbutton.controller.BaseController;
 import com.gospelware.liquidbutton.controller.PourFinishController;
 import com.gospelware.liquidbutton.controller.PourStartController;
+import com.gospelware.liquidbutton.controller.TickController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +24,6 @@ public class LiquidCheckView extends View {
     private BaseController mController;
     private List<BaseController> mControllers;
     private PourFinishListener listener;
-
 
     public LiquidCheckView(Context context) {
         this(context, null);
@@ -73,8 +74,10 @@ public class LiquidCheckView extends View {
         List<BaseController> controllers = new ArrayList<>();
         PourStartController startController = new PourStartController();
         PourFinishController finishController = new PourFinishController();
+        TickController tickController=new TickController();
         controllers.add(startController);
         controllers.add(finishController);
+        controllers.add(tickController);
         setControllers(controllers);
     }
 
@@ -114,7 +117,13 @@ public class LiquidCheckView extends View {
 
     public void startPour() {
         if (hasController()) {
-            mController.getAnimator().start();
+            Animator animator=mController.getAnimator();
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    finishPour();
+                }
+            });
         } else if (hasControllers()) {
             List<Animator> animators = new ArrayList<>();
 
@@ -123,6 +132,12 @@ public class LiquidCheckView extends View {
             }
             AnimatorSet animatorSet = new AnimatorSet();
             animatorSet.playSequentially(animators);
+            animatorSet.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    finishPour();
+                }
+            });
             animatorSet.start();
         }
     }
