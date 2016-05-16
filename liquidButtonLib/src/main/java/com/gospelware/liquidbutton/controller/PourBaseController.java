@@ -63,9 +63,7 @@ public abstract class PourBaseController extends BaseController {
 
     @Override
     public void draw(Canvas canvas) {
-        if (animator.isRunning()) {
-            drawPour(canvas);
-        }
+        drawPour(canvas);
 
         if (bubbles != null && bubbles.size() > 0) {
             for (Bubble bubble : bubbles) {
@@ -75,7 +73,13 @@ public abstract class PourBaseController extends BaseController {
     }
 
     @Override
-    public void render(float interpolatedTime) {
+    public void reset() {
+        bubbles.clear();
+    }
+
+    @Override
+    public void setRender(float interpolatedTime) {
+        super.setRender(interpolatedTime);
         computePour(interpolatedTime);
     }
 

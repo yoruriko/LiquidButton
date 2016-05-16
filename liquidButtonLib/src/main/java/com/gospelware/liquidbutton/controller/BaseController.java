@@ -2,8 +2,9 @@ package com.gospelware.liquidbutton.controller;
 
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.animation.TimeInterpolator;
-import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 
 import com.gospelware.liquidbutton.LiquidCheckView;
@@ -24,13 +25,16 @@ public abstract class BaseController {
 
     public abstract void draw(Canvas canvas);
 
-    public abstract void render(float interpolatedTime);
+    public abstract Animator buildAnimator();
 
-    public abstract Animator buildAnimator() ;
+    public abstract void reset();
 
+    public void setRender(float interpolatedTime) {
+        getCheckView().invalidate();
+    }
 
     public BaseController() {
-        animator=buildAnimator();
+        animator = buildAnimator();
     }
 
     public void setCheckView(LiquidCheckView checkView) {
@@ -44,24 +48,30 @@ public abstract class BaseController {
     public Animator getAnimator() {
         return animator;
     }
+
+    public boolean isRunning(){
+        return getAnimator().isRunning();
+    }
+
     public void getMeasure(int width, int height) {
         centerX = width / 2;
         centerY = height / 2;
         radius = width / 4;
     }
 
-    public ValueAnimator getBaseAnimator(long duration, TimeInterpolator interpolator) {
-        ValueAnimator animator = ValueAnimator.ofFloat(0.0f, 1.0f);
+    public Animator getBaseAnimator(long duration, TimeInterpolator interpolator) {
+        ObjectAnimator animator = ObjectAnimator.ofFloat(this, "render", 0.0f, 1.0f);
         animator.setDuration(duration);
         animator.setInterpolator(interpolator);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+
+        animator.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float interpolatedTime = (float) animation.getAnimatedValue();
-                render(interpolatedTime);
-                getCheckView().invalidate();
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+                reset();
             }
         });
+
         return animator;
     }
 }

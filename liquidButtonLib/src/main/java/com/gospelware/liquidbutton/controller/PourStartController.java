@@ -1,8 +1,6 @@
 package com.gospelware.liquidbutton.controller;
 
 import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Path;
@@ -38,30 +36,26 @@ public class PourStartController extends PourBaseController {
 
     @Override
     public Animator buildAnimator() {
-        ValueAnimator animator = getBaseAnimator(LIQUID_ANIMATION_DURATION, new FastOutLinearInInterpolator());
-        animator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                //clear the translation of the wave on x-axi
-                fai = 0;
-                bubbles.clear();
-            }
-        });
+        Animator animator = getBaseAnimator(LIQUID_ANIMATION_DURATION, new FastOutLinearInInterpolator());
 
         return animator;
     }
 
     @Override
-    public void draw(Canvas canvas) {
-        super.draw(canvas);
-        if(animator.isRunning()) {
-            drawLiquid(canvas);
-        }
+    public void reset() {
+        super.reset();
+        fai = 0;
     }
 
     @Override
-    public void render(float interpolatedTime) {
-        super.render(interpolatedTime);
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
+        drawLiquid(canvas);
+    }
+
+    @Override
+    public void setRender(float interpolatedTime) {
+        super.setRender(interpolatedTime);
         computeColor(interpolatedTime);
         computeLiquid(interpolatedTime);
 
@@ -69,7 +63,7 @@ public class PourStartController extends PourBaseController {
 
     @Override
     public void getMeasure(int width, int height) {
-        super.getMeasure(width,height);
+        super.getMeasure(width, height);
         aptitude = radius * APTITUDE_RATIO;
         left = centerX - radius;
         circlePath.addCircle(centerX, centerY, radius, Path.Direction.CW);
@@ -100,7 +94,7 @@ public class PourStartController extends PourBaseController {
         //generate bubbles at 0.4, 0.6 ,0.8 and 1.0
         if (interpolatedTime > 0.2f) {
             if (interpolatedTime % 0.2f <= 0.01) {
-                generateBubble(centerX,liquidLevel);
+                generateBubble(centerX, liquidLevel);
             }
         }
 

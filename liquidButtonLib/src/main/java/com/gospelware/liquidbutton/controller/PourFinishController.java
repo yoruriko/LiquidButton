@@ -1,8 +1,6 @@
 package com.gospelware.liquidbutton.controller;
 
 import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.view.animation.OvershootInterpolator;
@@ -30,27 +28,19 @@ public class PourFinishController extends PourBaseController {
 
     @Override
     public Animator buildAnimator() {
-        ValueAnimator animator = getBaseAnimator(BOUNCE_ANIMATION_DURATION, new OvershootInterpolator(BOUNCE_OVERSHOOT_TENSION));
-        animator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                bubbles.clear();
-            }
-        });
+        Animator animator = getBaseAnimator(BOUNCE_ANIMATION_DURATION, new OvershootInterpolator(BOUNCE_OVERSHOOT_TENSION));
         return animator;
     }
 
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        if (animator.isRunning()) {
-            drawBounceBall(canvas);
-        }
+        drawBounceBall(canvas);
     }
 
     @Override
-    public void render(float interpolatedTime) {
-        super.render(interpolatedTime);
+    public void setRender(float interpolatedTime) {
+        super.setRender(interpolatedTime);
         computeBounceBall(interpolatedTime);
     }
 

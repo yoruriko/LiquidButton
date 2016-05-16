@@ -6,6 +6,7 @@ import android.animation.AnimatorSet;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import com.gospelware.liquidbutton.controller.BaseController;
@@ -21,9 +22,14 @@ import java.util.List;
  */
 public class LiquidCheckView extends View {
 
+    private static final String TAG = LiquidCheckView.class.getSimpleName();
+
     private BaseController mController;
     private List<BaseController> mControllers;
     private PourFinishListener listener;
+    private boolean isFillAfter;
+    private boolean fillAfterFlag;
+    private Animator mAnimator;
 
     public LiquidCheckView(Context context) {
         this(context, null);
@@ -43,6 +49,10 @@ public class LiquidCheckView extends View {
         if (hasController()) {
             mController.setCheckView(this);
         }
+    }
+
+    public void setFillAfter(boolean fillAfter) {
+        this.isFillAfter = fillAfter;
     }
 
     private boolean hasController() {
@@ -70,11 +80,14 @@ public class LiquidCheckView extends View {
         return mControllers;
     }
 
+    /**
+     * Basic Animations to build the LiquidButton
+     */
     protected void init() {
         List<BaseController> controllers = new ArrayList<>();
         PourStartController startController = new PourStartController();
         PourFinishController finishController = new PourFinishController();
-        TickController tickController=new TickController();
+        TickController tickController = new TickController();
         controllers.add(startController);
         controllers.add(finishController);
         controllers.add(tickController);
@@ -94,6 +107,7 @@ public class LiquidCheckView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         int width = getWidth();
         int height = getHeight();
+
         if (hasController()) {
             mController.getMeasure(width, height);
         } else if (hasControllers()) {
@@ -106,41 +120,100 @@ public class LiquidCheckView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (hasController()) {
+
+        BaseController controller=getRunningController();
+        if(controller!=null){
+            controller.draw(canvas);
+        }
+
+        //if the fill after flag is on, draw the lastFrame
+        if (fillAfterFlag) {
+            onFillAfter(canvas);
+        }
+    }
+
+    public BaseController getRunningController(){
+        if(hasController()&&getController().isRunning()){
+            return getController();
+        }else if(hasControllers()){
+            for(BaseController controller:getControllers()){
+                if(controller.isRunning()){
+                    return controller;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public void onFillAfter(Canvas canvas) {
+        if (hasController() && !getController().isRunning()) {
             mController.draw(canvas);
         } else if (hasControllers()) {
-            for (BaseController controller : mControllers) {
+            //draw the last frame of the last controller
+            BaseController controller = getControllers().get(getControllers().size() - 1);
+            if (!controller.isRunning()) {
                 controller.draw(canvas);
             }
         }
     }
 
-    public void startPour() {
+    public Animator buildAnimator() {
         if (hasController()) {
-            Animator animator=mController.getAnimator();
-            animator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    finishPour();
-                }
-            });
+            return getController().getAnimator();
         } else if (hasControllers()) {
             List<Animator> animators = new ArrayList<>();
-
-            for (BaseController controller : mControllers) {
+            for (BaseController controller : getControllers()) {
                 animators.add(controller.getAnimator());
             }
             AnimatorSet animatorSet = new AnimatorSet();
             animatorSet.playSequentially(animators);
-            animatorSet.addListener(new AnimatorListenerAdapter() {
+            return animatorSet;
+        }
+
+        return null;
+    }
+
+    public void startPour() {
+
+        setClickable(false);
+
+        //clear the fillAfterFlag
+        if (fillAfterFlag) {
+            fillAfterFlag = false;
+        }
+
+        if (mAnimator == null) {
+            mAnimator = buildAnimator();
+            mAnimator.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    onPourEnd();
                     finishPour();
                 }
             });
-            animatorSet.start();
+        }
+
+        if (mAnimator != null) {
+            mAnimator.start();
+        } else {
+            Log.e(TAG, "No controller or Animator is been build");
         }
     }
+
+    public void onPourEnd() {
+        //turn the fillAfter flag ON if it's been set
+        fillAfterFlag = isFillAfter;
+
+        if (fillAfterFlag) {
+            postInvalidate();
+        }
+
+        setClickable(true);
+    }
+
 
     public void finishPour() {
         if (listener != null) {

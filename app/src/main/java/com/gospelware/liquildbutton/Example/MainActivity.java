@@ -16,7 +16,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         LiquidCheckView liquidCheckView=(LiquidCheckView)findViewById(R.id.button);
+
         if(liquidCheckView!=null){
+
+            liquidCheckView.setFillAfter(true);
+
             liquidCheckView.setPourFinishListener(new LiquidCheckView.PourFinishListener() {
                 @Override
                 public void onPourFinish() {

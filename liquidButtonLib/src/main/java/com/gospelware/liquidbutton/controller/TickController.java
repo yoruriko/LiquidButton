@@ -1,8 +1,6 @@
 package com.gospelware.liquidbutton.controller;
 
 import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -47,16 +45,15 @@ public class TickController extends BaseController {
 
     @Override
     public Animator buildAnimator() {
-        ValueAnimator animator = getBaseAnimator(TICK_ANIMATION_DURATION, new OvershootInterpolator(TICK_OVERSHOOT_TENSION));
-        animator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                scale = 1.0f;
-                tickControl2 = null;
-                tickControl3 = null;
-            }
-        });
+        Animator animator = getBaseAnimator(TICK_ANIMATION_DURATION, new OvershootInterpolator(TICK_OVERSHOOT_TENSION));
         return animator;
+    }
+
+    @Override
+    public void reset() {
+        scale = 1.0f;
+        tickControl2 = null;
+        tickControl3 = null;
     }
 
     @Override
@@ -80,11 +77,9 @@ public class TickController extends BaseController {
 
     @Override
     public void draw(Canvas canvas) {
-        if (animator.isStarted()) {
-            canvas.scale(scale, scale, centerX, centerY);
-            drawCircle(canvas);
-            drawTick(canvas);
-        }
+        canvas.scale(scale, scale, centerX, centerY);
+        drawCircle(canvas);
+        drawTick(canvas);
     }
 
     protected void drawCircle(Canvas canvas) {
@@ -108,7 +103,8 @@ public class TickController extends BaseController {
     }
 
     @Override
-    public void render(float interpolatedTime) {
+    public void setRender(float interpolatedTime) {
+        super.setRender(interpolatedTime);
         computeScale(interpolatedTime);
         computeTick(interpolatedTime);
     }

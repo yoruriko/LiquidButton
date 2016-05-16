@@ -1,7 +1,6 @@
 package com.gospelware.liquidbutton.utils;
 
 import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
@@ -53,20 +52,12 @@ public class Bubble {
         animator = ObjectAnimator.ofFloat(this, "bubble", 0.0f, 1.0f);
         animator.setInterpolator(new DecelerateInterpolator(0.8f));
         animator.setDuration(duration);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                ObjectAnimator anim = (ObjectAnimator) animation;
-                Bubble b = (Bubble) anim.getTarget();
-                float interpolatedTime = (float) anim.getAnimatedValue();
-                if (b != null) {
-                    b.evaluate(interpolatedTime);
-                }
-            }
-        });
         animator.start();
     }
 
+    public void setBubble(float interpolatedTime){
+        evaluate(interpolatedTime);
+    }
 
     public static class BubbleGenerator {
         private Random random;
