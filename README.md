@@ -29,6 +29,11 @@ Uses startPour() to start the animation.
   });
 ```
 
+Set fillAfter using setFillAfter(), befault as not fill after
+```java
+liquidCheckView.setFillAfter(true);
+```
+
   Register PourFinishListener to the widget, it will send a callback onPourFinish() when the animation completed
 ```java
   liquidButton.setPourListener(new LiquidButton.PourFinishListener() {
@@ -44,7 +49,7 @@ Uses startPour() to start the animation.
 
 ```java
 dependencies {    
-  compile 'com.gospelware.liquidbutton:liquidButtonLib:1.0.2'    
+  compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.1'    
 }
 ```
 
