@@ -1,9 +1,13 @@
 package com.gospelware.liquidbutton.controller;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.view.animation.OvershootInterpolator;
+
+import java.util.Random;
 
 /**
  * Created by ricogao on 12/05/2016.
@@ -16,20 +20,30 @@ public class PourFinishController extends PourBaseController {
 
     public PourFinishController() {
         super();
-        pourPaint.setColor(Color.parseColor(LIQUID_COLOR));
-        liquidPaint.setColor(Color.parseColor(LIQUID_COLOR));
+        int color = Color.parseColor(LIQUID_COLOR);
+        pourPaint.setColor(color);
+        liquidPaint.setColor(color);
+        bubblePaint.setColor(color);
+
     }
 
 
     @Override
     public Animator buildAnimator() {
-        return getBaseAnimator(BOUNCE_ANIMATION_DURATION,new OvershootInterpolator(BOUNCE_OVERSHOOT_TENSION));
+        ValueAnimator animator = getBaseAnimator(BOUNCE_ANIMATION_DURATION, new OvershootInterpolator(BOUNCE_OVERSHOOT_TENSION));
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                bubbles.clear();
+            }
+        });
+        return animator;
     }
 
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        if(animator.isRunning()) {
+        if (animator.isRunning()) {
             drawBounceBall(canvas);
         }
     }
@@ -48,7 +62,15 @@ public class PourFinishController extends PourBaseController {
     @Override
     protected void computePour(float interpolatedTime) {
         pourTop.y = frameTop + (2 * radius * interpolatedTime);
-        pourBottom.y=bottom;
+        pourBottom.y = bottom;
+
+        //generate some bubbles when the pour animation comes to end
+        if (Math.abs(interpolatedTime - 0.2f) <= 0.15f) {
+            int count = new Random().nextInt(3) + 3;
+            for (int i = 0; i < count; i++) {
+                generateBubble(centerX, bottom - 2 * radius);
+            }
+        }
     }
 
     protected void computeBounceBall(float interpolatedTime) {

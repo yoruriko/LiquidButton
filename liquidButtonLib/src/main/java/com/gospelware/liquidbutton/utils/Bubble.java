@@ -20,8 +20,6 @@ public class Bubble {
     private long duration;
     private ObjectAnimator animator;
 
-    private final static float BUBBLE_INTERPOLATOR_FACTOR = 0.8f;
-
     private Bubble(BubbleGenerator generator) {
         this.start = generator.start;
         this.control = generator.control;
@@ -42,8 +40,8 @@ public class Bubble {
     private void evaluate(float interpolatedTime) {
         float timeLeft = 1.0f - interpolatedTime;
         alpha = Math.round((1.0f - interpolatedTime) * 255);
-        current.x = doMaths(timeLeft, interpolatedTime, start.x, control.x, end.x);
-        current.y = doMaths(timeLeft, interpolatedTime, start.y, control.y, end.y);
+        current.x = doMaths(interpolatedTime, timeLeft, start.x, control.x, end.x);
+        current.y = doMaths(interpolatedTime, timeLeft, start.y, control.y, end.y);
     }
 
     public void draw(Canvas canvas, Paint paint) {
@@ -53,7 +51,7 @@ public class Bubble {
 
     public void startAnim() {
         animator = ObjectAnimator.ofFloat(this, "bubble", 0.0f, 1.0f);
-        animator.setInterpolator(new DecelerateInterpolator(BUBBLE_INTERPOLATOR_FACTOR));
+        animator.setInterpolator(new DecelerateInterpolator(0.8f));
         animator.setDuration(duration);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
@@ -87,41 +85,35 @@ public class Bubble {
             return new Bubble(this);
         }
 
+        public BubbleGenerator generateBubbleX(float origin, float range, float offset) {
+            int side = random.nextInt();
+            float dx = 0;
+            //generate bubbles
+            if (side % 2 == 0) {
+                dx = origin - (random.nextFloat() * range) - offset;
+            } else {
+                dx = origin + (random.nextFloat() * range) + offset;
+            }
 
-        public BubbleGenerator rangeX(float minX, float rangeX) {
-            float offsetX = minX + getRandomX(rangeX);
-            this.control.x = start.x + offsetX;
-            this.end.x = control.x + (offsetX * random.nextFloat());
+            this.control.x = dx;
+            this.end.x = control.x + (control.x - start.x) * random.nextFloat();
             return this;
         }
 
-        public BubbleGenerator rangeY(float minY, float rangeY) {
-            float offsetY = minY + getRandomFloatOfRange(rangeY);
-            this.control.y = start.y - offsetY;
-            this.end.y = control.y + (random.nextFloat() * offsetY);
+        public BubbleGenerator generateBubbleY(float origin, float range) {
+            this.control.y = origin - range * (random.nextFloat() + 0.2f);
+            this.end.y = origin - (0.5f * (start.y - control.y));
             return this;
         }
 
-        public BubbleGenerator rangeDuration(int minDuration, int rangeDuration) {
-            int durationOffset = random.nextInt(rangeDuration);
-            this.duration = minDuration + durationOffset;
+        public BubbleGenerator generateRadius(float range) {
+            this.radius = range * random.nextFloat();
             return this;
         }
 
-        public BubbleGenerator rangeRadius(float min, float range) {
-            float offsetRadius = min + getRandomFloatOfRange(range);
-            this.radius = offsetRadius;
+        public BubbleGenerator generateDuration(int min,int range){
+            this.duration=random.nextInt(range) + min;
             return this;
-        }
-
-        private float getRandomX(float range) {
-            int sign = random.nextInt(1);
-            float result = getRandomFloatOfRange(range);
-            return (sign % 2 == 0) ? result : -result;
-        }
-
-        private float getRandomFloatOfRange(float range) {
-            return random.nextFloat() * range;
         }
 
     }

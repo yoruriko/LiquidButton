@@ -44,6 +44,7 @@ public class PourStartController extends PourBaseController {
             public void onAnimationStart(Animator animation) {
                 //clear the translation of the wave on x-axi
                 fai = 0;
+                bubbles.clear();
             }
         });
 
@@ -79,22 +80,29 @@ public class PourStartController extends PourBaseController {
         int red = (interpolatedTime <= FINISH_POUR) ? 255 : Math.round(255 * (1 - (interpolatedTime - FINISH_POUR) / TOUCH_BASE));
         int green = (interpolatedTime >= FINISH_POUR) ? 255 : Math.round(255 * interpolatedTime / FINISH_POUR);
         int liquidColor = Color.rgb(red, green, LIQUID_COLOR_BLUE);
+
         pourPaint.setColor(liquidColor);
         liquidPaint.setColor(liquidColor);
+        bubblePaint.setColor(liquidColor);
     }
 
     @Override
     protected void computePour(float interpolatedTime) {
         //0.0~0.1 drop to bottom, 0.9~1.0 on top
         pourBottom.y = (interpolatedTime < TOUCH_BASE) ? interpolatedTime / TOUCH_BASE * pourHeight + frameTop : bottom;
+
     }
 
 
     protected void computeLiquid(float interpolatedTime) {
         liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
 
-        //// TODO: 12/05/2016 Generate Bubbles
-
+        //generate bubbles at 0.4, 0.6 ,0.8 and 1.0
+        if (interpolatedTime > 0.2f) {
+            if (interpolatedTime % 0.2f <= 0.01) {
+                generateBubble(centerX,liquidLevel);
+            }
+        }
 
         float reduceRatio = 1.4f - interpolatedTime;
 
