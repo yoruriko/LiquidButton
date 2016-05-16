@@ -20,9 +20,9 @@ import java.util.List;
 /**
  * Created by ricogao on 12/05/2016.
  */
-public class LiquidCheckView extends View {
+public class LiquidButton extends View {
 
-    private static final String TAG = LiquidCheckView.class.getSimpleName();
+    private static final String TAG = LiquidButton.class.getSimpleName();
 
     private BaseController mController;
     private List<BaseController> mControllers;
@@ -31,15 +31,15 @@ public class LiquidCheckView extends View {
     private boolean fillAfterFlag;
     private Animator mAnimator;
 
-    public LiquidCheckView(Context context) {
+    public LiquidButton(Context context) {
         this(context, null);
     }
 
-    public LiquidCheckView(Context context, AttributeSet attrs) {
+    public LiquidButton(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public LiquidCheckView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public LiquidButton(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }

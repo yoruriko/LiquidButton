@@ -7,7 +7,7 @@ import android.animation.ObjectAnimator;
 import android.animation.TimeInterpolator;
 import android.graphics.Canvas;
 
-import com.gospelware.liquidbutton.LiquidCheckView;
+import com.gospelware.liquidbutton.LiquidButton;
 
 import java.lang.ref.WeakReference;
 
@@ -16,7 +16,7 @@ import java.lang.ref.WeakReference;
  */
 public abstract class BaseController {
     //set WeakReference to avoid memory leak
-    private WeakReference<LiquidCheckView> checkView;
+    private WeakReference<LiquidButton> checkView;
     Animator animator;
 
     int centerX;
@@ -37,11 +37,11 @@ public abstract class BaseController {
         animator = buildAnimator();
     }
 
-    public void setCheckView(LiquidCheckView checkView) {
-        this.checkView = new WeakReference<LiquidCheckView>(checkView);
+    public void setCheckView(LiquidButton checkView) {
+        this.checkView = new WeakReference<LiquidButton>(checkView);
     }
 
-    public LiquidCheckView getCheckView() {
+    public LiquidButton getCheckView() {
         return checkView != null ? checkView.get() : null;
     }
 
