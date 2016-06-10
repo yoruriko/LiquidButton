@@ -3,6 +3,7 @@ package com.gospelware.liquidbutton.controller;
 import android.animation.Animator;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.animation.OvershootInterpolator;
 
 import java.util.Random;
@@ -59,6 +60,7 @@ public class PourFinishController extends PourBaseController {
             int count = new Random().nextInt(3) + 3;
             for (int i = 0; i < count; i++) {
                 generateBubble(centerX, bottom - 2 * radius);
+                Log.i(PourFinishController.class.getSimpleName(),"Bubble Generated");
             }
         }
     }

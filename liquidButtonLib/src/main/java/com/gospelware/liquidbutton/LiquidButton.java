@@ -109,9 +109,9 @@ public class LiquidButton extends View {
         int height = getHeight();
 
         if (hasController()) {
-            mController.getMeasure(width, height);
+            getController().getMeasure(width, height);
         } else if (hasControllers()) {
-            for (BaseController controller : mControllers) {
+            for (BaseController controller : getControllers()) {
                 controller.getMeasure(width, height);
             }
         }
@@ -149,7 +149,7 @@ public class LiquidButton extends View {
 
     public void onFillAfter(Canvas canvas) {
         if (hasController() && !getController().isRunning()) {
-            mController.draw(canvas);
+            getController().draw(canvas);
         } else if (hasControllers()) {
             //draw the last frame of the last controller
             BaseController controller = getControllers().get(getControllers().size() - 1);
@@ -177,8 +177,6 @@ public class LiquidButton extends View {
 
     public void startPour() {
 
-        setClickable(false);
-
         //clear the fillAfterFlag
         if (fillAfterFlag) {
             fillAfterFlag = false;
@@ -196,7 +194,7 @@ public class LiquidButton extends View {
             });
         }
 
-        if (mAnimator != null) {
+        if (mAnimator != null&&!mAnimator.isRunning()) {
             mAnimator.start();
         } else {
             Log.e(TAG, "No controller or Animator is been build");
@@ -210,8 +208,6 @@ public class LiquidButton extends View {
         if (fillAfterFlag) {
             postInvalidate();
         }
-
-        setClickable(true);
     }
 
 

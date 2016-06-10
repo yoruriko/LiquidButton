@@ -50,7 +50,7 @@ public class Bubble {
 
     public void startAnim() {
         animator = ObjectAnimator.ofFloat(this, "bubble", 0.0f, 1.0f);
-        animator.setInterpolator(new DecelerateInterpolator(0.8f));
+        animator.setInterpolator(new DecelerateInterpolator(1.2f));
         animator.setDuration(duration);
         animator.start();
     }

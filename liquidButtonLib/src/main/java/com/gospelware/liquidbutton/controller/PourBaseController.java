@@ -23,7 +23,6 @@ public abstract class PourBaseController extends BaseController {
     Paint pourPaint;
     Paint liquidPaint;
     Paint bubblePaint;
-//    Paint liquidPaint;
 
     int pourHeight;
     int frameTop;
@@ -65,11 +64,15 @@ public abstract class PourBaseController extends BaseController {
     public void draw(Canvas canvas) {
         drawPour(canvas);
 
-        if (bubbles != null && bubbles.size() > 0) {
+        if (hasBubble()) {
             for (Bubble bubble : bubbles) {
                 bubble.draw(canvas, bubblePaint);
             }
         }
+    }
+
+    protected boolean hasBubble() {
+        return bubbles != null && !bubbles.isEmpty();
     }
 
     @Override

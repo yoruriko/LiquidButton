@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.support.v4.view.animation.FastOutLinearInInterpolator;
+import android.util.Log;
 
 /**
  * Created by ricogao on 12/05/2016.
@@ -95,6 +96,7 @@ public class PourStartController extends PourBaseController {
         if (interpolatedTime > 0.2f) {
             if (interpolatedTime % 0.2f <= 0.01) {
                 generateBubble(centerX, liquidLevel);
+                Log.i(PourStartController.class.getSimpleName(),"Bubble Generated");
             }
         }
 
