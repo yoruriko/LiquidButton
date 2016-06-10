@@ -96,10 +96,11 @@ public abstract class PourBaseController extends BaseController {
 
         Bubble.BubbleGenerator generator =
                 new Bubble.BubbleGenerator(x, y)
+                        .with(getCheckView())
                         .generateBubbleX(x, radius * 0.5f, pourStrokeWidth * 0.5f)
                         .generateBubbleY(y, radius)
                         .generateRadius(radius * 0.2f)
-                        .generateDuration(1000, 500);
+                        .generateDuration(1500, 500);
 
         Bubble bubble = generator.generate();
         bubble.startAnim();

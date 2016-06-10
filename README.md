@@ -49,7 +49,7 @@ liquidCheckView.setFillAfter(true);
 
 ```java
 dependencies {    
-  compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.1'    
+  compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.3'
 }
 ```
 

@@ -6,6 +6,9 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.view.animation.DecelerateInterpolator;
 
+
+import com.gospelware.liquidbutton.LiquidButton;
+
 import java.util.Random;
 
 /**
@@ -18,6 +21,7 @@ public class Bubble {
     private float radius;
     private long duration;
     private ObjectAnimator animator;
+    private LiquidButton target;
 
     private Bubble(BubbleGenerator generator) {
         this.start = generator.start;
@@ -25,6 +29,7 @@ public class Bubble {
         this.end = generator.end;
         this.radius = generator.radius;
         this.duration = generator.duration;
+        this.target=generator.target;
         current = start;
         alpha = 255;
     }
@@ -50,13 +55,14 @@ public class Bubble {
 
     public void startAnim() {
         animator = ObjectAnimator.ofFloat(this, "bubble", 0.0f, 1.0f);
-        animator.setInterpolator(new DecelerateInterpolator(1.2f));
+        animator.setInterpolator(new DecelerateInterpolator(0.8f));
         animator.setDuration(duration);
         animator.start();
     }
 
     public void setBubble(float interpolatedTime){
         evaluate(interpolatedTime);
+        target.postInvalidate();
     }
 
     public static class BubbleGenerator {
@@ -64,6 +70,7 @@ public class Bubble {
         private PointF start, end, control;
         private float radius;
         private int duration;
+        private LiquidButton target;
 
         public BubbleGenerator(float startX, float startY) {
             random = new Random();
@@ -72,8 +79,14 @@ public class Bubble {
             this.start = new PointF(startX, startY);
         }
 
+
         public Bubble generate() {
             return new Bubble(this);
+        }
+
+        public BubbleGenerator with(LiquidButton target){
+            this.target=target;
+            return this;
         }
 
         public BubbleGenerator generateBubbleX(float origin, float range, float offset) {
