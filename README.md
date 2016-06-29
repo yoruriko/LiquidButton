@@ -37,12 +37,12 @@ liquidCheckView.setFillAfter(true);
 
   Register PourFinishListener to the widget, it will send a callback onPourFinish() when the animation completed
 ```java
-  liquidButton.setPourListener(new LiquidButton.PourFinishListener() {
-    @Override
-    public void onPourFinish() {
-    Toast.makeText(MainActivity.this, "Loading Finish!", Toast.LENGTH_SHORT).show();
-    }
-  });
+      liquidCheckView.setPourFinishListener(new LiquidButton.PourFinishListener() {
+          @Override
+          public void onPourFinish() {
+              Toast.makeText(MainActivity.this, "Finish", Toast.LENGTH_SHORT).show();
+          }
+      });
 ```
 ## How to?
 
