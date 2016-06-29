@@ -19,20 +19,20 @@ In xml layout file
 ```
 Uses startPour() to start the animation.    
 ```java
-  LiquidButton liquidButton = (LiquidButton) findViewById(R.id.button);
+      LiquidButton liquidButton = (LiquidButton) findViewById(R.id.button);
   
-  liquidButton.setOnClickListener(new View.OnClickListener() {
-    @Override
-    public void onClick(View v) {
-      LiquidButton btn = (LiquidButton) v;
-      btn.startPour();
-    }
-  });
+      liquidButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+            LiquidButton btn = (LiquidButton) v;
+            btn.startPour();
+      }
+      });
 ```
 
 Set fillAfter using setFillAfter(), befault as not fill after
 ```java
-liquidCheckView.setFillAfter(true);
+      liquidCheckView.setFillAfter(true);
 ```
 
   Register PourFinishListener to the widget, it will send a callback onPourFinish() when the animation completed
@@ -49,8 +49,8 @@ liquidCheckView.setFillAfter(true);
 **Gradle**        
 
 ```java
-dependencies {    
-  compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.3'
-}
+      dependencies {    
+      compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.3'
+      }
 ```
 
