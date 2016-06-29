@@ -33,7 +33,7 @@ public abstract class BaseController {
         getCheckView().invalidate();
     }
 
-     BaseController() {
+    BaseController() {
         animator = buildAnimator();
     }
 
@@ -41,7 +41,7 @@ public abstract class BaseController {
         this.checkView = new WeakReference<>(checkView);
     }
 
-     LiquidButton getCheckView() {
+    LiquidButton getCheckView() {
         return checkView != null ? checkView.get() : null;
     }
 
@@ -49,7 +49,7 @@ public abstract class BaseController {
         return animator;
     }
 
-    public boolean isRunning(){
+    public boolean isRunning() {
         return getAnimator().isRunning();
     }
 
@@ -59,7 +59,9 @@ public abstract class BaseController {
         radius = width / 4;
     }
 
-     Animator getBaseAnimator(long duration, TimeInterpolator interpolator) {
+
+    Animator getBaseAnimator(long duration, TimeInterpolator interpolator) {
+
         ObjectAnimator animator = ObjectAnimator.ofFloat(this, "render", 0.0f, 1.0f);
         animator.setDuration(duration);
         animator.setInterpolator(interpolator);

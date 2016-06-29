@@ -12,7 +12,7 @@ import android.util.Log;
  */
 public class PourStartController extends PourBaseController {
 
-
+    private float liquidLevel;
     private int left;
     private int pourLength;
 
@@ -23,10 +23,12 @@ public class PourStartController extends PourBaseController {
     private static final long LIQUID_ANIMATION_DURATION = 5000;
 
     //control shift-x on sin wave
-    private int fai = 0;
-    private float aptitude;
-    private static final int FAI_FACTOR = 5;
-    private static final float APTITUDE_RATIO = 0.3f;
+    private float fai;
+    private float amplitude;
+
+    private float currAmplitude;
+    private static final int FAI_FACTOR = 6;
+    private static final float APTITUDE_RATIO = 0.2f;
     private static final float ANGLE_VELOCITY = 0.5f;
 
     public PourStartController() {
@@ -55,24 +57,22 @@ public class PourStartController extends PourBaseController {
     @Override
     public void setRender(float interpolatedTime) {
         super.setRender(interpolatedTime);
-        computeColor(interpolatedTime);
         computeLiquid(interpolatedTime);
-
     }
 
     @Override
     public void getMeasure(int width, int height) {
         super.getMeasure(width, height);
         pourLength = width;
-        aptitude = radius * APTITUDE_RATIO;
+        amplitude = radius * APTITUDE_RATIO;
         left = centerX - radius;
         circlePath.addCircle(centerX, centerY, radius, Path.Direction.CW);
     }
 
-    private void computeColor(float interpolatedTime) {
+    private void computeColor(float liquidLevel) {
 
-        int red = (interpolatedTime <= FINISH_POUR) ? 255 : Math.round(255 * (1 - (interpolatedTime - FINISH_POUR) / TOUCH_BASE));
-        int green = (interpolatedTime >= FINISH_POUR) ? 255 : Math.round(255 * interpolatedTime / FINISH_POUR);
+        int red = (liquidLevel >= centerY) ? 255 : Math.round((1 - ((float) centerY - liquidLevel) / (float) radius) * 255);
+        int green = (liquidLevel <= centerY) ? 255 : Math.round((1 - (liquidLevel - centerY) / (float) radius) * 255);
         int liquidColor = Color.rgb(red, green, LIQUID_COLOR_BLUE);
 
         pourPaint.setColor(liquidColor);
@@ -89,7 +89,12 @@ public class PourStartController extends PourBaseController {
 
 
     private void computeLiquid(float interpolatedTime) {
-        float liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
+
+        liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
+
+        computeColor(liquidLevel);
+
+        computeWave(liquidLevel);
 
         //generate bubbles at 0.4, 0.6 ,0.8 and 1.0
         if (interpolatedTime > 0.2f) {
@@ -99,27 +104,42 @@ public class PourStartController extends PourBaseController {
             }
         }
 
-        float reduceRatio = 1.4f - interpolatedTime;
+
+    }
+
+    private void computeWave(float level) {
+        float reduceRatio = 1.4f + (level - top) / (float) (2 * radius);
 
         // scroll x by the fai factor
-        if (interpolatedTime >= TOUCH_BASE) {
-            //slowly reduce the wave frequency
-            fai += FAI_FACTOR * (reduceRatio);
-            if (fai == 360) {
+        //slowly reduce the wave frequency
+        if (level < bottom) {
+            float faiFactor;
+            if (level > centerY) {
+                faiFactor = 0.4f + (level - centerY) / (float) radius;
+            } else {
+                faiFactor = 0.4f + ((float) centerY - level) / (float) radius;
+            }
+
+            fai += FAI_FACTOR * (faiFactor);
+            if (fai >= 360) {
                 fai = 0;
             }
         }
 
+        //slowly reduce the amplitude when filling comes to end
+        currAmplitude = amplitude * reduceRatio;
+        computeWavePath();
+    }
+
+    private void computeWavePath() {
         //clear the path for next render
         wavePath.reset();
-        //slowly reduce the amplitude when filling comes to end
-        float a = (interpolatedTime <= FINISH_POUR) ? aptitude : aptitude * (reduceRatio);
 
         for (int i = 0; i < 2 * radius; i++) {
             int dx = left + i;
 
             // y = a * sin( w * x + fai ) + h
-            int dy = (int) (a * Math.sin((i * ANGLE_VELOCITY + fai) * Math.PI / 180) + liquidLevel);
+            int dy = (int) (currAmplitude * Math.sin((i * ANGLE_VELOCITY + fai) * Math.PI / 180) + liquidLevel);
 
             if (i == 0) {
                 wavePath.moveTo(dx, dy);
@@ -138,9 +158,10 @@ public class PourStartController extends PourBaseController {
         //save the canvas status
         canvas.save();
         //clip the canvas to circle
-        canvas.clipPath(circlePath);
-        canvas.drawPath(wavePath, liquidPaint);
-        //restore the canvas status~
+        if (liquidLevel < bottom) {
+            canvas.clipPath(circlePath);
+            canvas.drawPath(wavePath, liquidPaint);
+        }//restore the canvas status~
         canvas.restore();
     }
 }

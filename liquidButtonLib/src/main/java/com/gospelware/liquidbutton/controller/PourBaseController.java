@@ -26,6 +26,7 @@ abstract class PourBaseController extends BaseController {
 
     int frameTop;
     int bottom;
+    int top;
     private float pourStrokeWidth;
 
     private List<Bubble> bubbles;
@@ -54,6 +55,7 @@ abstract class PourBaseController extends BaseController {
         super.getMeasure(width, height);
         frameTop = centerY - 3 * radius;
         bottom = centerY + radius;
+        top = centerY+radius;
         pourStrokeWidth = radius / 6;
         pourPaint.setStrokeWidth(pourStrokeWidth);
     }
