@@ -29,8 +29,7 @@ public class PourFinishController extends PourBaseController {
 
     @Override
     public Animator buildAnimator() {
-        Animator animator = getBaseAnimator(BOUNCE_ANIMATION_DURATION, new OvershootInterpolator(BOUNCE_OVERSHOOT_TENSION));
-        return animator;
+        return getBaseAnimator(BOUNCE_ANIMATION_DURATION, new OvershootInterpolator(BOUNCE_OVERSHOOT_TENSION));
     }
 
     @Override
@@ -60,16 +59,16 @@ public class PourFinishController extends PourBaseController {
             int count = new Random().nextInt(3) + 3;
             for (int i = 0; i < count; i++) {
                 generateBubble(centerX, bottom - 2 * radius);
-                Log.i(PourFinishController.class.getSimpleName(),"Bubble Generated");
+                Log.i(PourFinishController.class.getSimpleName(), "Bubble Generated");
             }
         }
     }
 
-    protected void computeBounceBall(float interpolatedTime) {
+    private void computeBounceBall(float interpolatedTime) {
         bounceY = (interpolatedTime < 1f) ? centerY : Math.round((interpolatedTime - 1) * radius) + centerY;
     }
 
-    protected void drawBounceBall(Canvas canvas) {
+    private void drawBounceBall(Canvas canvas) {
         canvas.drawCircle(centerX, bounceY, radius, liquidPaint);
     }
 }

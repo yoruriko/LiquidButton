@@ -20,7 +20,6 @@ public class Bubble {
     private int alpha;
     private float radius;
     private long duration;
-    private ObjectAnimator animator;
     private LiquidButton target;
 
     private Bubble(BubbleGenerator generator) {
@@ -54,12 +53,13 @@ public class Bubble {
     }
 
     public void startAnim() {
-        animator = ObjectAnimator.ofFloat(this, "bubble", 0.0f, 1.0f);
+        ObjectAnimator animator = ObjectAnimator.ofFloat(this, "bubble", 0.0f, 1.0f);
         animator.setInterpolator(new DecelerateInterpolator(0.8f));
         animator.setDuration(duration);
         animator.start();
     }
 
+    //used by Animator
     public void setBubble(float interpolatedTime){
         evaluate(interpolatedTime);
         target.postInvalidate();
@@ -91,7 +91,7 @@ public class Bubble {
 
         public BubbleGenerator generateBubbleX(float origin, float range, float offset) {
             int side = random.nextInt();
-            float dx = 0;
+            float dx;
             //generate bubbles
             if (side % 2 == 0) {
                 dx = origin - (random.nextFloat() * range) - offset;

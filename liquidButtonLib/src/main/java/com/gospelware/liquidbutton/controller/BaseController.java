@@ -17,7 +17,7 @@ import java.lang.ref.WeakReference;
 public abstract class BaseController {
     //set WeakReference to avoid memory leak
     private WeakReference<LiquidButton> checkView;
-    Animator animator;
+    private Animator animator;
 
     int centerX;
     int centerY;
@@ -33,15 +33,15 @@ public abstract class BaseController {
         getCheckView().invalidate();
     }
 
-    public BaseController() {
+     BaseController() {
         animator = buildAnimator();
     }
 
     public void setCheckView(LiquidButton checkView) {
-        this.checkView = new WeakReference<LiquidButton>(checkView);
+        this.checkView = new WeakReference<>(checkView);
     }
 
-    public LiquidButton getCheckView() {
+     LiquidButton getCheckView() {
         return checkView != null ? checkView.get() : null;
     }
 
@@ -59,7 +59,7 @@ public abstract class BaseController {
         radius = width / 4;
     }
 
-    public Animator getBaseAnimator(long duration, TimeInterpolator interpolator) {
+     Animator getBaseAnimator(long duration, TimeInterpolator interpolator) {
         ObjectAnimator animator = ObjectAnimator.ofFloat(this, "render", 0.0f, 1.0f);
         animator.setDuration(duration);
         animator.setInterpolator(interpolator);

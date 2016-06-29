@@ -45,8 +45,7 @@ public class TickController extends BaseController {
 
     @Override
     public Animator buildAnimator() {
-        Animator animator = getBaseAnimator(TICK_ANIMATION_DURATION, new OvershootInterpolator(TICK_OVERSHOOT_TENSION));
-        return animator;
+        return getBaseAnimator(TICK_ANIMATION_DURATION, new OvershootInterpolator(TICK_OVERSHOOT_TENSION));
     }
 
     @Override
@@ -82,11 +81,11 @@ public class TickController extends BaseController {
         drawTick(canvas);
     }
 
-    protected void drawCircle(Canvas canvas) {
+    private void drawCircle(Canvas canvas) {
         canvas.drawCircle(centerX, centerY, radius, circlePaint);
     }
 
-    protected void drawTick(Canvas canvas) {
+    private void drawTick(Canvas canvas) {
         tickPath.reset();
 
         tickPath.moveTo(tickPoint1.x, tickPoint1.y);
@@ -109,12 +108,12 @@ public class TickController extends BaseController {
         computeTick(interpolatedTime);
     }
 
-    protected void computeScale(float interpolatedTime) {
+    private void computeScale(float interpolatedTime) {
         float scaleDown = (1.0f - SCALE_DOWN_SIZE) * (interpolatedTime);
         scale = 1.0f - scaleDown;
     }
 
-    protected void computeTick(float interpolatedTime) {
+    private void computeTick(float interpolatedTime) {
         if (interpolatedTime <= 0.5f) {
 
             float dt = interpolatedTime / 0.5f;

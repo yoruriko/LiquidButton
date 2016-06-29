@@ -24,11 +24,10 @@ public class LiquidButton extends View {
 
     private static final String TAG = LiquidButton.class.getSimpleName();
 
-    private BaseController mController;
     private List<BaseController> mControllers;
     private PourFinishListener listener;
     private boolean isFillAfter;
-    private boolean fillAfterFlag;
+    private boolean drawFillAfterFlag;
     private Animator mAnimator;
 
     public LiquidButton(Context context) {
@@ -44,26 +43,12 @@ public class LiquidButton extends View {
         init();
     }
 
-    public void setController(BaseController controller) {
-        this.mController = controller;
-        if (hasController()) {
-            mController.setCheckView(this);
-        }
-    }
 
     public void setFillAfter(boolean fillAfter) {
         this.isFillAfter = fillAfter;
     }
 
-    private boolean hasController() {
-        return mController != null;
-    }
-
-    public BaseController getController() {
-        return mController;
-    }
-
-    public void setControllers(List<BaseController> controllers) {
+    private void setControllers(List<BaseController> controllers) {
         this.mControllers = controllers;
         if (hasControllers()) {
             for (BaseController controller : mControllers) {
@@ -76,14 +61,12 @@ public class LiquidButton extends View {
         return mControllers != null && mControllers.size() > 0;
     }
 
-    public List<BaseController> getControllers() {
-        return mControllers;
-    }
+
 
     /**
      * Basic Animations to build the LiquidButton
      */
-    protected void init() {
+    private void init() {
         List<BaseController> controllers = new ArrayList<>();
         PourStartController startController = new PourStartController();
         PourFinishController finishController = new PourFinishController();
@@ -108,10 +91,8 @@ public class LiquidButton extends View {
         int width = getWidth();
         int height = getHeight();
 
-        if (hasController()) {
-            getController().getMeasure(width, height);
-        } else if (hasControllers()) {
-            for (BaseController controller : getControllers()) {
+        if (hasControllers()) {
+            for (BaseController controller : mControllers) {
                 controller.getMeasure(width, height);
             }
         }
@@ -121,23 +102,21 @@ public class LiquidButton extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        BaseController controller=getRunningController();
-        if(controller!=null){
+        BaseController controller = getRunningController();
+        if (controller != null) {
             controller.draw(canvas);
         }
 
         //if the fill after flag is on, draw the lastFrame
-        if (fillAfterFlag) {
+        if (drawFillAfterFlag) {
             onFillAfter(canvas);
         }
     }
 
-    public BaseController getRunningController(){
-        if(hasController()&&getController().isRunning()){
-            return getController();
-        }else if(hasControllers()){
-            for(BaseController controller:getControllers()){
-                if(controller.isRunning()){
+    private BaseController getRunningController() {
+        if (hasControllers()) {
+            for (BaseController controller : mControllers) {
+                if (controller.isRunning()) {
                     return controller;
                 }
             }
@@ -147,24 +126,20 @@ public class LiquidButton extends View {
 
     }
 
-    public void onFillAfter(Canvas canvas) {
-        if (hasController() && !getController().isRunning()) {
-            getController().draw(canvas);
-        } else if (hasControllers()) {
+    private void onFillAfter(Canvas canvas) {
+        if (hasControllers()) {
             //draw the last frame of the last controller
-            BaseController controller = getControllers().get(getControllers().size() - 1);
+            BaseController controller = mControllers.get(mControllers.size() - 1);
             if (!controller.isRunning()) {
                 controller.draw(canvas);
             }
         }
     }
 
-    public Animator buildAnimator() {
-        if (hasController()) {
-            return getController().getAnimator();
-        } else if (hasControllers()) {
+    private Animator buildAnimator() {
+        if (hasControllers()) {
             List<Animator> animators = new ArrayList<>();
-            for (BaseController controller : getControllers()) {
+            for (BaseController controller : mControllers) {
                 animators.add(controller.getAnimator());
             }
             AnimatorSet animatorSet = new AnimatorSet();
@@ -178,8 +153,8 @@ public class LiquidButton extends View {
     public void startPour() {
 
         //clear the fillAfterFlag
-        if (fillAfterFlag) {
-            fillAfterFlag = false;
+        if (drawFillAfterFlag) {
+            drawFillAfterFlag = false;
         }
 
         if (mAnimator == null) {
@@ -194,24 +169,24 @@ public class LiquidButton extends View {
             });
         }
 
-        if (mAnimator != null&&!mAnimator.isRunning()) {
+        if (mAnimator != null && !mAnimator.isRunning()) {
             mAnimator.start();
         } else {
             Log.e(TAG, "No controller or Animator is been build");
         }
     }
 
-    public void onPourEnd() {
+    private void onPourEnd() {
         //turn the fillAfter flag ON if it's been set
-        fillAfterFlag = isFillAfter;
+        drawFillAfterFlag = isFillAfter;
 
-        if (fillAfterFlag) {
+        if (drawFillAfterFlag) {
             postInvalidate();
         }
     }
 
 
-    public void finishPour() {
+    private void finishPour() {
         if (listener != null) {
             listener.onPourFinish();
         }

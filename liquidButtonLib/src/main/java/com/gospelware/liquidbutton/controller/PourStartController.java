@@ -13,8 +13,8 @@ import android.util.Log;
 public class PourStartController extends PourBaseController {
 
 
-    private float liquidLevel;
     private int left;
+    private int pourLength;
 
     private Path wavePath;
     private Path circlePath;
@@ -37,9 +37,7 @@ public class PourStartController extends PourBaseController {
 
     @Override
     public Animator buildAnimator() {
-        Animator animator = getBaseAnimator(LIQUID_ANIMATION_DURATION, new FastOutLinearInInterpolator());
-
-        return animator;
+        return getBaseAnimator(LIQUID_ANIMATION_DURATION, new FastOutLinearInInterpolator());
     }
 
     @Override
@@ -65,12 +63,13 @@ public class PourStartController extends PourBaseController {
     @Override
     public void getMeasure(int width, int height) {
         super.getMeasure(width, height);
+        pourLength = width;
         aptitude = radius * APTITUDE_RATIO;
         left = centerX - radius;
         circlePath.addCircle(centerX, centerY, radius, Path.Direction.CW);
     }
 
-    protected void computeColor(float interpolatedTime) {
+    private void computeColor(float interpolatedTime) {
 
         int red = (interpolatedTime <= FINISH_POUR) ? 255 : Math.round(255 * (1 - (interpolatedTime - FINISH_POUR) / TOUCH_BASE));
         int green = (interpolatedTime >= FINISH_POUR) ? 255 : Math.round(255 * interpolatedTime / FINISH_POUR);
@@ -84,19 +83,19 @@ public class PourStartController extends PourBaseController {
     @Override
     protected void computePour(float interpolatedTime) {
         //0.0~0.1 drop to bottom, 0.9~1.0 on top
-        pourBottom.y = (interpolatedTime < TOUCH_BASE) ? interpolatedTime / TOUCH_BASE * pourHeight + frameTop : bottom;
+        pourBottom.y = (interpolatedTime < TOUCH_BASE) ? interpolatedTime / TOUCH_BASE * pourLength + frameTop : bottom;
 
     }
 
 
-    protected void computeLiquid(float interpolatedTime) {
-        liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
+    private void computeLiquid(float interpolatedTime) {
+        float liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
 
         //generate bubbles at 0.4, 0.6 ,0.8 and 1.0
         if (interpolatedTime > 0.2f) {
             if (interpolatedTime % 0.2f <= 0.01) {
                 generateBubble(centerX, liquidLevel);
-                Log.i(PourStartController.class.getSimpleName(),"Bubble Generated");
+                Log.i(PourStartController.class.getSimpleName(), "Bubble Generated");
             }
         }
 
@@ -135,7 +134,7 @@ public class PourStartController extends PourBaseController {
         wavePath.close();
     }
 
-    protected void drawLiquid(Canvas canvas) {
+    private void drawLiquid(Canvas canvas) {
         //save the canvas status
         canvas.save();
         //clip the canvas to circle

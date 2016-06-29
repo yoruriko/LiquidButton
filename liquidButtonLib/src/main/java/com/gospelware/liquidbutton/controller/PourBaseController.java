@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by ricogao on 12/05/2016.
  */
-public abstract class PourBaseController extends BaseController {
+abstract class PourBaseController extends BaseController {
 
     //interpolated time when liquid reach the bottom of the ball
     final static float TOUCH_BASE = 0.1f;
@@ -24,14 +24,13 @@ public abstract class PourBaseController extends BaseController {
     Paint liquidPaint;
     Paint bubblePaint;
 
-    int pourHeight;
     int frameTop;
     int bottom;
-    float pourStrokeWidth;
+    private float pourStrokeWidth;
 
-    List<Bubble> bubbles;
+    private List<Bubble> bubbles;
 
-    public PourBaseController() {
+    PourBaseController() {
         super();
         pourBottom = new PointF();
         pourTop = new PointF();
@@ -47,13 +46,12 @@ public abstract class PourBaseController extends BaseController {
         bubblePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         bubblePaint.setStyle(Paint.Style.FILL);
 
-        bubbles = new ArrayList<Bubble>();
+        bubbles = new ArrayList<>();
     }
 
     @Override
     public void getMeasure(int width, int height) {
         super.getMeasure(width, height);
-        pourHeight = width;
         frameTop = centerY - 3 * radius;
         bottom = centerY + radius;
         pourStrokeWidth = radius / 6;
@@ -71,7 +69,7 @@ public abstract class PourBaseController extends BaseController {
         }
     }
 
-    protected boolean hasBubble() {
+    private boolean hasBubble() {
         return bubbles != null && !bubbles.isEmpty();
     }
 
@@ -88,11 +86,11 @@ public abstract class PourBaseController extends BaseController {
 
     protected abstract void computePour(float interpolatedTime);
 
-    protected void drawPour(Canvas canvas) {
+    private void drawPour(Canvas canvas) {
         canvas.drawLine(centerX, pourTop.y, centerX, pourBottom.y, pourPaint);
     }
 
-    protected void generateBubble(float x, float y) {
+    void generateBubble(float x, float y) {
 
         Bubble.BubbleGenerator generator =
                 new Bubble.BubbleGenerator(x, y)
