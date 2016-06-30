@@ -31,6 +31,7 @@ public class PourStartController extends PourBaseController {
     private static final float APTITUDE_RATIO = 0.2f;
     private static final float ANGLE_VELOCITY = 0.5f;
 
+
     public PourStartController() {
         super();
         wavePath = new Path();
@@ -90,7 +91,7 @@ public class PourStartController extends PourBaseController {
 
     private void computeLiquid(float interpolatedTime) {
 
-        liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
+        liquidLevel = (interpolatedTime < TOUCH_BASE) ? bottom : computeLiquidLevel(interpolatedTime);
 
         computeColor(liquidLevel);
 
@@ -105,6 +106,10 @@ public class PourStartController extends PourBaseController {
         }
 
 
+    }
+
+    private float computeLiquidLevel(float interpolatedTime) {
+        return bottom - (2 * radius * (interpolatedTime - TOUCH_BASE) / FINISH_POUR);
     }
 
     private void computeWave(float level) {
