@@ -6,13 +6,13 @@ import android.animation.AnimatorSet;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 import com.gospelware.liquidbutton.controller.BaseController;
 import com.gospelware.liquidbutton.controller.PourFinishController;
 import com.gospelware.liquidbutton.controller.PourStartController;
 import com.gospelware.liquidbutton.controller.TickController;
+import com.gospelware.liquidbutton.controller.WaveController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +22,17 @@ import java.util.List;
  */
 public class LiquidButton extends View {
 
-    private static final String TAG = LiquidButton.class.getSimpleName();
-
-    private List<BaseController> mControllers;
     private PourFinishListener listener;
     private boolean isFillAfter;
+    private boolean isAutoPlay;
+
     private boolean drawFillAfterFlag;
-    private Animator mAnimator;
+    private Animator startAnim, waveAnim, finishAnim;
+
+    private BaseController startController;
+    private WaveController waveController;
+    private List<BaseController> finishControllers;
+
 
     public LiquidButton(Context context) {
         this(context, null);
@@ -43,46 +47,74 @@ public class LiquidButton extends View {
         init();
     }
 
+    /**
+     * Basic Animations to build the LiquidButton
+     */
+    private void init() {
+        startController = new PourStartController();
+        startController.setCheckView(this);
+
+        waveController = new WaveController();
+        waveController.setCheckView(this);
+
+        PourFinishController finishController = new PourFinishController();
+        finishController.setCheckView(this);
+
+        TickController tickController = new TickController();
+        tickController.setCheckView(this);
+
+        List<BaseController> finishControllers = new ArrayList<>();
+        finishControllers.add(finishController);
+        finishControllers.add(tickController);
+
+        this.finishControllers = finishControllers;
+
+    }
+
 
     public void setFillAfter(boolean fillAfter) {
         this.isFillAfter = fillAfter;
     }
 
-    private void setControllers(List<BaseController> controllers) {
-        this.mControllers = controllers;
-        if (hasControllers()) {
-            for (BaseController controller : mControllers) {
-                controller.setCheckView(this);
-            }
+    public boolean isFillAfter() {
+        return isFillAfter;
+    }
+
+    private void onFillAfter(Canvas canvas) {
+        //draw the last frame of the last controller
+        BaseController controller = finishControllers.get(finishControllers.size() - 1);
+
+        if (!controller.isRunning()) {
+            controller.draw(canvas);
         }
+
     }
 
-    private boolean hasControllers() {
-        return mControllers != null && mControllers.size() > 0;
+    public boolean isAutoPlay() {
+        return isAutoPlay;
     }
 
-
-
-    /**
-     * Basic Animations to build the LiquidButton
-     */
-    private void init() {
-        List<BaseController> controllers = new ArrayList<>();
-        PourStartController startController = new PourStartController();
-        PourFinishController finishController = new PourFinishController();
-        TickController tickController = new TickController();
-        controllers.add(startController);
-        controllers.add(finishController);
-        controllers.add(tickController);
-        setControllers(controllers);
+    public void setAutoPlay(boolean autoPlay) {
+        isAutoPlay = autoPlay;
     }
 
     public interface PourFinishListener {
         void onPourFinish();
+
+        void onProgressUpdate(float progress);
+    }
+
+    private void onFinishPour() {
+        if (listener != null) {
+            listener.onPourFinish();
+        }
     }
 
     public void setPourFinishListener(PourFinishListener listener) {
         this.listener = listener;
+        if (waveController != null) {
+            waveController.setPourFinishListener(listener);
+        }
     }
 
     @Override
@@ -91,10 +123,11 @@ public class LiquidButton extends View {
         int width = getWidth();
         int height = getHeight();
 
-        if (hasControllers()) {
-            for (BaseController controller : mControllers) {
-                controller.getMeasure(width, height);
-            }
+        startController.getMeasure(width, height);
+        waveController.getMeasure(width, height);
+
+        for (BaseController controller : finishControllers) {
+            controller.getMeasure(width, height);
         }
     }
 
@@ -113,83 +146,109 @@ public class LiquidButton extends View {
         }
     }
 
+
     private BaseController getRunningController() {
-        if (hasControllers()) {
-            for (BaseController controller : mControllers) {
+        if (startController.isRunning()) {
+            return startController;
+        } else if (waveController.isRunning()) {
+            return waveController;
+        } else {
+            for (BaseController controller : finishControllers) {
                 if (controller.isRunning()) {
                     return controller;
                 }
             }
         }
-
-        return null;
-
-    }
-
-    private void onFillAfter(Canvas canvas) {
-        if (hasControllers()) {
-            //draw the last frame of the last controller
-            BaseController controller = mControllers.get(mControllers.size() - 1);
-            if (!controller.isRunning()) {
-                controller.draw(canvas);
-            }
-        }
-    }
-
-    private Animator buildAnimator() {
-        if (hasControllers()) {
-            List<Animator> animators = new ArrayList<>();
-            for (BaseController controller : mControllers) {
-                animators.add(controller.getAnimator());
-            }
-            AnimatorSet animatorSet = new AnimatorSet();
-            animatorSet.playSequentially(animators);
-            return animatorSet;
-        }
-
         return null;
     }
+
+
+    private Animator buildStartAnimator() {
+        Animator animator = startController.getAnimator();
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                startWaveAnimator();
+                if (isAutoPlay()) {
+                    LiquidButton.this.changeProgress(1f);
+                }
+            }
+        });
+
+        return animator;
+    }
+
+    private Animator buildFinishAnimator() {
+        AnimatorSet animatorSet = new AnimatorSet();
+        List<Animator> animators = new ArrayList<>();
+        for (BaseController controller : finishControllers) {
+            animators.add(controller.getAnimator());
+        }
+        animatorSet.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                onPourEnd();
+                onFinishPour();
+                LiquidButton.this.setClickable(true);
+            }
+        });
+        animatorSet.playSequentially(animators);
+        return animatorSet;
+    }
+
+    private void startWaveAnimator() {
+        if (waveAnim == null) {
+            waveAnim = waveController.getAnimator();
+        }
+        waveAnim.start();
+    }
+
 
     public void startPour() {
-
+        if(startAnim==null) {
+            startAnim = buildStartAnimator();
+        }
         //clear the fillAfterFlag
         if (drawFillAfterFlag) {
             drawFillAfterFlag = false;
         }
 
-        if (mAnimator == null) {
-            mAnimator = buildAnimator();
-            mAnimator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                    onPourEnd();
-                    finishPour();
-                }
-            });
-        }
+        startAnim.start();
+        this.setClickable(false);
+    }
 
-        if (mAnimator != null && !mAnimator.isRunning()) {
-            mAnimator.start();
+    public void finishPour() {
+
+        if (waveController.getLiquidProgress() >= 1f) {
+            if (finishAnim == null) {
+                finishAnim = buildFinishAnimator();
+            }
+            finishAnim.start();
         } else {
-            Log.e(TAG, "No controller or Animator is been build");
+            changeProgress(1f);
         }
     }
 
     private void onPourEnd() {
         //turn the fillAfter flag ON if it's been set
-        drawFillAfterFlag = isFillAfter;
+        drawFillAfterFlag = isFillAfter();
 
         if (drawFillAfterFlag) {
             postInvalidate();
         }
     }
 
-
-    private void finishPour() {
-        if (listener != null) {
-            listener.onPourFinish();
+    /**
+     * This method only works when the given progress is larger than current progress
+     * When progress is 1, it automatically starts the finish animation.
+     *
+     * @param progress
+     */
+    public void changeProgress(float progress) {
+        if (waveController.isRunning()) {
+            waveController.changeProgress(progress);
         }
     }
+
 
 }

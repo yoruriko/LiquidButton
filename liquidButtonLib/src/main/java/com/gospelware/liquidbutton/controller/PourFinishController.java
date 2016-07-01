@@ -39,7 +39,7 @@ public class PourFinishController extends PourBaseController {
     }
 
     @Override
-    public void setRender(float interpolatedTime) {
+    protected void setRender(float interpolatedTime) {
         super.setRender(interpolatedTime);
         computeBounceBall(interpolatedTime);
     }

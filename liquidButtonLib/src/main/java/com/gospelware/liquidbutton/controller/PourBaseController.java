@@ -14,11 +14,6 @@ import java.util.List;
  */
 abstract class PourBaseController extends BaseController {
 
-    //interpolated time when liquid reach the bottom of the ball
-    final static float TOUCH_BASE = 0.1f;
-    //interpolated time when liquid starts to finish pouring
-    final static float FINISH_POUR = 0.9f;
-
     PointF pourBottom, pourTop;
     Paint pourPaint;
     Paint liquidPaint;
@@ -81,7 +76,7 @@ abstract class PourBaseController extends BaseController {
     }
 
     @Override
-    public void setRender(float interpolatedTime) {
+    protected void setRender(float interpolatedTime) {
         super.setRender(interpolatedTime);
         computePour(interpolatedTime);
     }

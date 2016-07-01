@@ -25,11 +25,11 @@ public abstract class BaseController {
 
     public abstract void draw(Canvas canvas);
 
-    public abstract Animator buildAnimator();
+    abstract Animator buildAnimator();
 
     public abstract void reset();
 
-    public void setRender(float interpolatedTime) {
+    protected void setRender(float interpolatedTime) {
         getCheckView().invalidate();
     }
 

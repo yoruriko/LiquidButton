@@ -102,7 +102,7 @@ public class TickController extends BaseController {
     }
 
     @Override
-    public void setRender(float interpolatedTime) {
+    protected void setRender(float interpolatedTime) {
         super.setRender(interpolatedTime);
         computeScale(interpolatedTime);
         computeTick(interpolatedTime);
