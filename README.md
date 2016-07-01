@@ -32,16 +32,35 @@ Uses startPour() to start the animation.
 
 Set fillAfter using setFillAfter(), befault as not fill after
 ```java
-      liquidCheckView.setFillAfter(true);
+      liquidButton.setFillAfter(true);
+```
+Set autoPlay using setAutoPlay(), default as not palying automatically
+```java
+      liquidButton.setAutoPlay(true);
 ```
 
-  Register PourFinishListener to the widget, it will send a callback onPourFinish() when the animation completed
+You'll able to uses changeProgress() to alternate the progress of the liquid level. You need AutoPlay turn Off to be able to do that. Progress are measure in float, where 1f= 100%;
 ```java
-      liquidCheckView.setPourFinishListener(new LiquidButton.PourFinishListener() {
-          @Override
-          public void onPourFinish() {
-              Toast.makeText(MainActivity.this, "Finish", Toast.LENGTH_SHORT).show();
-          }
+      liquidButton.changeProgress(progress);
+```
+
+By default the widget starts a finish animation when the progress is 1f, but you can also uses finishPour to start the finish Animation.
+```java
+      liquidButton.finishPour();
+```
+
+  Register PourFinishListener to the widget, it will send a callback onPourFinish() when the animation completed, and onProgressUpdate() when new progress is updated;
+```java
+      liquidButton.setPourFinishListener(new LiquidButton.PourFinishListener() {
+            @Override
+            public void onPourFinish() {
+                  Toast.makeText(MainActivity.this, "Finish", Toast.LENGTH_SHORT).show();
+            }
+            
+            @Override
+            public void onProgressUpdate(float progress) {
+                textView.setText(String.format("%.2f", progress * 100) + "%");
+            }          
       });
 ```
 ## How to?
@@ -50,12 +69,12 @@ Set fillAfter using setFillAfter(), befault as not fill after
 
 ```java
       dependencies {    
-      compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.3'
+      compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.4'
       }
 ```
 
 ## To Do:
 
-      Prgression update (currently wokring on)
+      Prgression update (finished)
       Alternating the Animation speed
 
