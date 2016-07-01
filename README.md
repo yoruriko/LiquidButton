@@ -54,3 +54,8 @@ Set fillAfter using setFillAfter(), befault as not fill after
       }
 ```
 
+## To Do:
+
+      Prgression update (currently wokring on)
+      Alternating the Animation speed
+
