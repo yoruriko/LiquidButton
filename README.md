@@ -39,16 +39,6 @@ Set autoPlay using setAutoPlay(), default as not palying automatically
       liquidButton.setAutoPlay(true);
 ```
 
-You'll able to uses changeProgress() to alternate the progress of the liquid level. You need AutoPlay turn Off to be able to do that. Progress are measure in float, where 1f= 100%;
-```java
-      liquidButton.changeProgress(progress);
-```
-
-By default the widget starts a finish animation when the progress is 1f, but you can also uses finishPour to start the finish Animation.
-```java
-      liquidButton.finishPour();
-```
-
   Register PourFinishListener to the widget, it will send a callback onPourFinish() when the animation completed, and onProgressUpdate() when new progress is updated;
 ```java
       liquidButton.setPourFinishListener(new LiquidButton.PourFinishListener() {
@@ -59,17 +49,30 @@ By default the widget starts a finish animation when the progress is 1f, but you
             
             @Override
             public void onProgressUpdate(float progress) {
-                textView.setText(String.format("%.2f", progress * 100) + "%");
+                  textView.setText(String.format("%.2f", progress * 100) + "%");
             }          
       });
 ```
+
+## How to update and finish the animation?
+
+You'll able to uses changeProgress() to alternate the progress of the liquid level. (You need AutoPlay turn Off to be able to do that.) Progress are measure in float, where 1f = 100%;
+```java
+      liquidButton.changeProgress(progress);
+```
+
+By default the widget starts a finish animation when the progress is 1f, but you can also uses finishPour to start the finish Animation.
+```java
+      liquidButton.finishPour();
+```
+
 ## How to?
 
 **Gradle**        
 
 ```java
       dependencies {    
-      compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.4'
+            compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.4'
       }
 ```
 
