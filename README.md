@@ -72,7 +72,7 @@ By default the widget starts a finish animation when the progress is 1f, but you
 
 ```java
       dependencies {    
-            compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.4'
+            compile 'com.gospelware.liquidbutton:liquidButtonLib:1.1.5'
       }
 ```
 
