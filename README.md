@@ -30,7 +30,7 @@ Uses startPour() to start the animation.
       });
 ```
 
-Set fillAfter using setFillAfter(), befault as not fill after
+Set fillAfter using setFillAfter(), default as not fill after
 ```java
       liquidButton.setFillAfter(true);
 ```
